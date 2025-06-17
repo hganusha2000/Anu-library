@@ -2,41 +2,22 @@ package Hutechlibrary.Anu.Library.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
+import Hutechlibrary.Anu.Library.dto.DataResponse;
 import Hutechlibrary.Anu.Library.entity.Publisher;
-import Hutechlibrary.Anu.Library.exception.ResourceNotFoundException;
-import Hutechlibrary.Anu.Library.repository.PublisherRepository;
 
-@Service
-public class PublisherService {
+public interface PublisherService {
+	DataResponse createPublisher(Publisher publisher);
 
-    @Autowired
-    private PublisherRepository publisherRepository;
+	Publisher getPublisherById(Long id);
 
-    public List<Publisher> getAllPublishers() {
-        return publisherRepository.findAll();
-    }
+	Publisher updatePublisher(Long id, Publisher publisherDetails);
 
-    public Publisher getPublisherById(Long id) {
-        return publisherRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Publisher not found with id: " + id));
-    }
+	void deletePublisher(Long id);
 
-    public Publisher createPublisher(Publisher publisher) {
-        return publisherRepository.save(publisher);
-    }
+	Page<Publisher> getAllPublishers(Pageable pageable);
 
-    public Publisher updatePublisher(Long id, Publisher publisherDetails) {
-        Publisher publisher = getPublisherById(id);
-        publisher.setName(publisherDetails.getName());
-        publisher.setAddress(publisherDetails.getAddress());
-        return publisherRepository.save(publisher);
-    }
-
-    public void deletePublisher(Long id) {
-        Publisher publisher = getPublisherById(id);
-        publisherRepository.delete(publisher);
-    }
 }

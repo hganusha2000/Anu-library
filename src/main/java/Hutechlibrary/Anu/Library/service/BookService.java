@@ -2,45 +2,26 @@ package Hutechlibrary.Anu.Library.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
+import Hutechlibrary.Anu.Library.dto.DataResponse;
+import Hutechlibrary.Anu.Library.entity.Author;
 import Hutechlibrary.Anu.Library.entity.Book;
-import Hutechlibrary.Anu.Library.exception.ResourceNotFoundException;
-import Hutechlibrary.Anu.Library.repository.BookRepository;
+import jakarta.validation.Valid;
 
-@Service
-public class BookService {
+public interface BookService {
 
-    @Autowired
-    private BookRepository bookRepository;
+	DataResponse createBook(Book book);
 
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
-    }
+	Book getBookById(Long id);
 
-    public Book getBookById(Long id) {
-        return bookRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
-    }
+	Book updateBook(Long id, Book bookDetails);
 
-    public Book createBook(Book book) {
-        return bookRepository.save(book);
-    }
+	void deleteBook(Long id);
 
-    public Book updateBook(Long id, Book bookDetails) {
-        Book book = getBookById(id);
-        book.setTitle(bookDetails.getTitle());
-        book.setIsbn(bookDetails.getIsbn());
-        book.setAuthor(bookDetails.getAuthor());
-        book.setPublisher(bookDetails.getPublisher());
-        book.setPublicationYear(bookDetails.getPublicationYear());
-        book.setAvailable(bookDetails.isAvailable());
-        return bookRepository.save(book);
-    }
+	Page<Book> getAllBooksPaginated(Pageable pageable);
 
-    public void deleteBook(Long id) {
-        Book book = getBookById(id);
-        bookRepository.delete(book);
-    }
+
 }

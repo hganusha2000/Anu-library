@@ -10,11 +10,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class AuthorDetails {
-	
-	
+public class PublisherDetails {
 	List<DataResponse> data;
-	  private int totalPages;
-	  private long totalElements;
-	
+	private int totalPages;
+    private long totalElements;
 }
+		

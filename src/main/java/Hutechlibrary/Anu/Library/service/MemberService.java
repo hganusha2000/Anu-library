@@ -2,43 +2,23 @@ package Hutechlibrary.Anu.Library.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import Hutechlibrary.Anu.Library.dto.DataResponse;
 import Hutechlibrary.Anu.Library.entity.Member;
-import Hutechlibrary.Anu.Library.exception.ResourceNotFoundException;
-import Hutechlibrary.Anu.Library.repository.MemberRepository;
 
-@Service
-public class MemberService {
+public interface MemberService {
 
-    @Autowired
-    private MemberRepository memberRepository;
+	DataResponse createMember(Member member);
 
-    public List<Member> getAllMembers() {
-        return memberRepository.findAll();
-    }
+	Member getMemberById(Long id);
 
-    public Member getMemberById(Long id) {
-        return memberRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + id));
-    }
+	Member updateMember(Long id, Member memberDetails);
 
-    public Member createMember(Member member) {
-        return memberRepository.save(member);
-    }
+	void deleteMember(Long id);
+	
+	Page<Member> getAllMembersPaginated(Pageable pageable);
 
-    public Member updateMember(Long id, Member memberDetails) {
-        Member member = getMemberById(id);
-        member.setFirstName(memberDetails.getFirstName());
-        member.setLastName(memberDetails.getLastName());
-        member.setEmail(memberDetails.getEmail());
-        member.setPhone(memberDetails.getPhone());
-        return memberRepository.save(member);
-    }
 
-    public void deleteMember(Long id) {
-        Member member = getMemberById(id);
-        memberRepository.delete(member);
-    }
 }
