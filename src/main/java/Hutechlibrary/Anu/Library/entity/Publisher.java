@@ -1,6 +1,10 @@
 package Hutechlibrary.Anu.Library.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -31,4 +35,10 @@ public class Publisher {
     @OneToMany(mappedBy = "publisher")
     @JsonManagedReference(value = "publisher-book")
     private List<Book> books;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

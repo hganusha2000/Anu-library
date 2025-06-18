@@ -1,5 +1,10 @@
 package Hutechlibrary.Anu.Library.entity;
 
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -11,6 +16,12 @@ public class Role {
 
     @Column(nullable = false, unique = true)
     private String name;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
     // Getters and setters
     public Long getId() { return id; }

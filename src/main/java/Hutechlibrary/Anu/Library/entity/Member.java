@@ -1,6 +1,10 @@
 package Hutechlibrary.Anu.Library.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
@@ -32,4 +36,10 @@ public class Member {
     @OneToMany(mappedBy = "member")
     @JsonBackReference
     private List<Borrow> borrows;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

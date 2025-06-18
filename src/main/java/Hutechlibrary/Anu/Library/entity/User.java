@@ -1,7 +1,12 @@
 package Hutechlibrary.Anu.Library.entity;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 import java.util.Set;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "users")
@@ -26,6 +31,12 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
     // Getters and setters
     public Long getId() { return id; }

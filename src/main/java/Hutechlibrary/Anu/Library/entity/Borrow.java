@@ -1,6 +1,10 @@
 package Hutechlibrary.Anu.Library.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,4 +38,10 @@ public class Borrow {
     private LocalDate borrowDate;
     private LocalDate returnDate;
     private boolean returned;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }
