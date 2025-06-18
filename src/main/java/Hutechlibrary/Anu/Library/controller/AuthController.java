@@ -8,9 +8,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
@@ -20,6 +22,8 @@ import Hutechlibrary.Anu.Library.dto.RegisterRequest;
 import Hutechlibrary.Anu.Library.entity.User;
 import Hutechlibrary.Anu.Library.service.JwtService;
 import Hutechlibrary.Anu.Library.service.UserService;
+import jakarta.mail.MessagingException;
+import jakarta.validation.Valid;
 
 import java.util.Map;
 
@@ -40,7 +44,7 @@ public class AuthController {
     private UserDetailsService userDetailsService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse> login(@Valid @RequestBody LoginRequest request) {
         try {
             authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
@@ -58,7 +62,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<ApiResponse> register(@RequestBody RegisterRequest registerRequest) throws MessagingException {
         try {
             User user = userService.registerUser(registerRequest);
 
@@ -79,4 +83,17 @@ public class AuthController {
         }
     }
     
+    @GetMapping("/activate")
+    public ResponseEntity<ApiResponse> activateAccount(@RequestParam String token) {
+        try {
+            userService.activateUser(token);
+            DataResponse dataResponse = new DataResponse(HttpStatus.OK.value(), "Account activated successfully", null);
+            return ResponseEntity.ok(new ApiResponse(dataResponse));
+        } catch (IllegalArgumentException e) {
+            DataResponse error = new DataResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null);
+            return ResponseEntity.badRequest().body(new ApiResponse(error));
+        }
+    }
 }
+
+    

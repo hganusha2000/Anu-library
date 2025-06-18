@@ -14,6 +14,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,7 +33,13 @@ public class Member {
 
     private String firstName;
     private String lastName;
+    
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
     private String email;
+    
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "\\d{10}", message = "Phone number must be exactly 10 digits")
     private String phone;
 
     @OneToMany(mappedBy = "member")

@@ -1,18 +1,23 @@
 package Hutechlibrary.Anu.Library.exception;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.naming.AuthenticationException;
 
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
 
-
+@ControllerAdvice
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 	 @ExceptionHandler(ResourceNotFoundException.class)
@@ -38,5 +43,15 @@ public class GlobalExceptionHandler {
 	    public ResponseEntity<ApiResponse> handleGenericException(Exception ex) {
 	        DataResponse dataResponse = new DataResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred", null);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(dataResponse));
+	    }
+	    
+	    @ExceptionHandler(MethodArgumentNotValidException.class)
+	    public ResponseEntity<Object> handleValidationException(MethodArgumentNotValidException ex) {
+	        Map<String, String> errors = new HashMap<>();
+	        ex.getBindingResult().getFieldErrors().forEach(error ->
+	            errors.put(error.getField(), error.getDefaultMessage())
+	        );
+
+	        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
 	    }
 	}

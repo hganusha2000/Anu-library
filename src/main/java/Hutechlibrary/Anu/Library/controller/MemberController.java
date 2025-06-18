@@ -24,6 +24,7 @@ import Hutechlibrary.Anu.Library.dto.DataResponse;
 import Hutechlibrary.Anu.Library.dto.MemberDetails;
 import Hutechlibrary.Anu.Library.entity.Member;
 import Hutechlibrary.Anu.Library.service.MemberService;
+import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api")
 public class MemberController {
@@ -35,7 +36,7 @@ public class MemberController {
     // CREATE a new member – LIBRARIAN or ADMIN
     @PostMapping("/librarian/members")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> createMember(@RequestBody Member member) {
+    public ResponseEntity<ApiResponse> createMember(@Valid @RequestBody Member member) {
         DataResponse responseData = memberService.createMember(member);
 
         // Directly use the responseData from service
@@ -90,7 +91,7 @@ public class MemberController {
     // UPDATE an existing member – LIBRARIAN or ADMIN
     @PutMapping("/librarian/members/{id}")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> updateMember(@PathVariable("id") Long id, @RequestBody Member memberDetails) {
+    public ResponseEntity<ApiResponse> updateMember(@PathVariable("id") Long id, @Valid @RequestBody Member memberDetails) {
         Member updatedMember = memberService.updateMember(id, memberDetails);
 
         DataResponse dataResponse = new DataResponse(HttpStatus.OK.value(), "Member updated successfully", updatedMember);

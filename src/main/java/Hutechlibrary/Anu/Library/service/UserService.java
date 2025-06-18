@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 
 import Hutechlibrary.Anu.Library.dto.RegisterRequest;
@@ -26,6 +29,8 @@ import Hutechlibrary.Anu.Library.repository.UserRepository;
 @Service
 public class UserService implements UserDetailsService {
 
+    private static final Set<String> VALID_ROLES = Set.of("USER", "LIBRARIAN", "ADMIN");
+
     @Autowired
     private UserRepository userRepository;
 
@@ -34,40 +39,37 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
-    private static final Set<String> VALID_ROLES = Set.of("USER", "LIBRARIAN", "ADMIN");
+
+    @Autowired
+    private EmailService emailService;
 
     @Override
-    @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
-
-        // Map roles to authorities
-        List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toList());
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        if (!user.isActivated()) {
+            throw new UsernameNotFoundException("Account not activated");
+        }
 
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                authorities
+                user.getUsername(), user.getPassword(),
+                user.getRoles().stream()
+                        .map(role -> new SimpleGrantedAuthority(role.getName()))
+                        .collect(Collectors.toList())
         );
     }
 
     @Transactional
-    public User registerUser(RegisterRequest registerRequest) {
+    public User registerUser(RegisterRequest registerRequest) throws MessagingException {
         String roleInput = registerRequest.getRole().toUpperCase();
         if (!VALID_ROLES.contains(roleInput)) {
             throw new IllegalArgumentException("Invalid role: " + roleInput);
         }
 
-        // Check if username already exists
         if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists");
         }
 
-        // Check if email already exists
         if (userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email already exists");
         }
@@ -76,25 +78,37 @@ public class UserService implements UserDetailsService {
         user.setUsername(registerRequest.getUsername());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setEmail(registerRequest.getEmail());
+        user.setActivated(false);
+        user.setActivationToken(UUID.randomUUID().toString());
 
-        Set<Role> roles = new HashSet<>();
         String roleName = "ROLE_" + roleInput;
         Role role = roleRepository.findByName(roleName)
-                .orElseGet(() -> {
-                    Role newRole = new Role();
-                    newRole.setName(roleName);
-                    return roleRepository.save(newRole);
-                });
-        roles.add(role);
-        user.setRoles(roles);
+                .orElseThrow();
 
-        return userRepository.save(user);
+        user.setRoles(Set.of(role));
+        user = userRepository.save(user);
+
+        emailService.sendActivationEmail(user.getEmail(), user.getUsername(), user.getActivationToken());
+
+        return user;
     }
 
-    public Page<User> getAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable);
+    @Transactional
+    public void activateUser(String token) {
+        User user = userRepository.findByActivationToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid activation token"));
+        user.setActivated(true);
+        user.setActivationToken(null);
+        userRepository.save(user);
     }
-    public void deleteUser(String id) {
-        userRepository.deleteById(Long.valueOf(id));
-    }
+
+	public void deleteUser(String id) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public Page<User> getAllUsers(Pageable pageable) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
