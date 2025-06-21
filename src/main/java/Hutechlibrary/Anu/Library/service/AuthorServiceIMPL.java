@@ -1,5 +1,6 @@
 package Hutechlibrary.Anu.Library.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,36 +14,37 @@ import Hutechlibrary.Anu.Library.entity.Author;
 import Hutechlibrary.Anu.Library.exception.ResourceNotFoundException;
 import Hutechlibrary.Anu.Library.repository.AuthorRepository;
 
+
+
 @Service
 public class AuthorServiceIMPL implements AuthorService {
-	
-	@Autowired
+
+    @Autowired
     private AuthorRepository authorRepository;
-    
-	@Override
-	public DataResponse createAuthor(Author author) {
-	    if (authorRepository.existsByName(author.getName())) {
-	        return new DataResponse(HttpStatus.CONFLICT.value(), "Author already exists", null);
-	    }
 
-	    Author savedAuthor = authorRepository.save(author);
-	    return new DataResponse(HttpStatus.CREATED.value(), "Author created successfully", savedAuthor);
-	}
-	
+    @Override
+    public DataResponse createAuthor(Author author) {
+        if (authorRepository.existsByName(author.getName())) {
+            return new DataResponse(HttpStatus.CONFLICT.value(), "Author already exists", null);
+        }
 
-	 @Override
-	    public Page<Author> getAllAuthorsPaginated(Pageable pageable) {
-	        return authorRepository.findAll(pageable);
-	    }
-	 
-	 @Override
-	 public Author getAuthorById(Long id) {
-	     return authorRepository.findById(id)
-	             .orElseThrow(() -> new ResourceNotFoundException("Author not found with id: " + id));
-	 }
+        author.setRecordedAt(LocalDateTime.now()); // Set timestamp manually
+        Author savedAuthor = authorRepository.save(author);
+        return new DataResponse(HttpStatus.CREATED.value(), "Author created successfully", savedAuthor);
+    }
 
+    @Override
+    public Page<Author> getAllAuthorsPaginated(Pageable pageable) {
+        return authorRepository.findAll(pageable);
+    }
 
+    @Override
+    public Author getAuthorById(Long id) {
+        return authorRepository.findById(id)
+        	    .orElseThrow(() -> new ResourceNotFoundException("Author not found with id: " + id));
+    }
 
+    @Override
     public Author updateAuthor(Long id, Author authorDetails) {
         Author author = getAuthorById(id);
         author.setName(authorDetails.getName());
@@ -50,12 +52,10 @@ public class AuthorServiceIMPL implements AuthorService {
         return authorRepository.save(author);
     }
 
+    @Override
     public void deleteAuthor(Long id) {
         Author author = getAuthorById(id);
-        authorRepository.delete(author);
+        author.setDeleted(true);
+        authorRepository.save(author); //soft delete
     }
-
 }
-
-
-

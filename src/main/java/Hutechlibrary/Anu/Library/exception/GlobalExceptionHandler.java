@@ -20,11 +20,11 @@ import Hutechlibrary.Anu.Library.dto.DataResponse;
 @ControllerAdvice
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-	 @ExceptionHandler(ResourceNotFoundException.class)
-	    public ResponseEntity<ApiResponse> handleResourceNotFound(ResourceNotFoundException ex) {
-	        DataResponse dataResponse = new DataResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage(), null);
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(dataResponse));
-	    }
+//	 @ExceptionHandler(ResourceNotFoundException.class)
+//	    public ResponseEntity<ApiResponse> handleResourceNotFound(ResourceNotFoundException ex) {
+//	        DataResponse dataResponse = new DataResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage(), null);
+//	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(dataResponse));
+//	    }
 
 	    @ExceptionHandler(AccessDeniedException.class)
 	    public ResponseEntity<ApiResponse> handleAccessDenied() {

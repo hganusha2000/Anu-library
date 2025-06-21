@@ -62,7 +62,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse> register(@RequestBody RegisterRequest registerRequest) throws MessagingException {
+    public ResponseEntity<ApiResponse> register(@Valid @RequestBody RegisterRequest registerRequest) throws MessagingException {
         try {
             User user = userService.registerUser(registerRequest);
 

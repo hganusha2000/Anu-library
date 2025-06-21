@@ -44,10 +44,5 @@ public class Book {
     private int publicationYear;
     private boolean available;
     
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-    
+	private LocalDateTime createdAt = LocalDateTime.now();
 }

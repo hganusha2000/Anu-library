@@ -1,7 +1,5 @@
 package Hutechlibrary.Anu.Library.service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -83,7 +81,7 @@ public class UserService implements UserDetailsService {
 
         String roleName = "ROLE_" + roleInput;
         Role role = roleRepository.findByName(roleName)
-                .orElseThrow();
+                .orElseThrow(()-> new IllegalArgumentException("Role not found: " + roleName));
 
         user.setRoles(Set.of(role));
         user = userRepository.save(user);
@@ -108,7 +106,7 @@ public class UserService implements UserDetailsService {
 	}
 
 	public Page<User> getAllUsers(Pageable pageable) {
-		// TODO Auto-generated method stub
-		return null;
+		return userRepository.findAll(pageable);
+	
 	}
 }
