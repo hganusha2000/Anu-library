@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
 import Hutechlibrary.Anu.Library.dto.BorrowDetails;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
+import Hutechlibrary.Anu.Library.dto.PageBorrowDetails;
 import Hutechlibrary.Anu.Library.entity.Borrow;
 import Hutechlibrary.Anu.Library.entity.Member;
 import Hutechlibrary.Anu.Library.repository.BorrowRepository;
@@ -53,19 +54,26 @@ public class BorrowController {
 
         Page<Borrow> borrowPage = borrowService.getAllBorrowRecords(PageRequest.of(page, size));
 
-        List<DataResponse> borrowDataList = borrowPage.getContent().stream()
-                .map(borrow -> new DataResponse(HttpStatus.OK.value(), "Borrow data", borrow))
+        List<BorrowDetails> borrowDetailsList = borrowPage.getContent().stream()
+                .map(borrow -> {
+                    BorrowDetails dto = new BorrowDetails();
+                    dto.setId(borrow.getId());
+                    dto.setBorrowDate(borrow.getBorrowDate());
+                    dto.setReturnDate(borrow.getReturnDate().toLocalDate());
+                    dto.setReturned(borrow.isReturned());
+//                    dto.setMemberName(borrow.getMember().getName()); // Assuming getName() exists
+                    dto.setBookTitle(borrow.getBook().getTitle());   // Assuming getTitle() exists
+                    return dto;
+                })
                 .collect(Collectors.toList());
 
-        BorrowDetails details = new BorrowDetails();
-        details.setData(borrowDataList);
-        details.setTotalPages(borrowPage.getTotalPages());
-        details.setTotalElements(borrowPage.getTotalElements());
+        PageBorrowDetails pageBorrowDetails = new PageBorrowDetails();
+        pageBorrowDetails.setBorrows(borrowDetailsList);
+        pageBorrowDetails.setTotalPages(borrowPage.getTotalPages());
+        pageBorrowDetails.setTotalElements(borrowPage.getTotalElements());
 
-        DataResponse wrapper = new DataResponse(HttpStatus.OK.value(), "Borrow records fetched successfully", details);
-        ApiResponse response = new ApiResponse(wrapper);
-
-        return ResponseEntity.ok(response);
+        DataResponse wrapper = new DataResponse(HttpStatus.OK.value(), "Borrow records fetched successfully", pageBorrowDetails);
+        return ResponseEntity.ok(new ApiResponse(wrapper));
     }
 
     @GetMapping("/librarian/borrows/{id}")
@@ -76,6 +84,38 @@ public class BorrowController {
         ApiResponse response = new ApiResponse(dataResponse);
         return ResponseEntity.ok(response);
     }
+    
+    @GetMapping("/librarian/borrows/search")
+    @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> searchBorrows(
+            @RequestParam(required = false) Long memberId,
+            @RequestParam(required = false) Long bookId,
+            @RequestParam(required = false) Boolean returned,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Borrow> borrowPage = borrowService.searchBorrows(memberId, bookId, returned, PageRequest.of(page, size));
+
+        List<BorrowDetails> borrowDetailsList = borrowPage.getContent().stream()
+                .map(borrow -> {
+                    BorrowDetails dto = new BorrowDetails();
+                    dto.setId(borrow.getId());
+                    dto.setBorrowDate(borrow.getBorrowDate()); // ✅ correct
+                    dto.setReturnDate(borrow.getReturnDate().toLocalDate());
+                    dto.setReturned(borrow.isReturned());
+                    dto.setBookTitle(borrow.getBook().getTitle());
+                    return dto;
+                }).collect(Collectors.toList());
+
+        PageBorrowDetails details = new PageBorrowDetails();
+        details.setBorrows(borrowDetailsList);
+        details.setTotalPages(borrowPage.getTotalPages());
+        details.setTotalElements(borrowPage.getTotalElements());
+
+        DataResponse dataResponse = new DataResponse(HttpStatus.OK.value(), "Filtered borrow records fetched", details);
+        return ResponseEntity.ok(new ApiResponse(dataResponse));
+    }
+
 
     @PutMapping("/librarian/borrows/{id}")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")

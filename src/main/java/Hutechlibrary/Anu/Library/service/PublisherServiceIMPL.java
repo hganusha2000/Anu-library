@@ -40,6 +40,11 @@ public class PublisherServiceIMPL implements PublisherService{
         return publisherRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Publisher not found with id: " + id));
     }
+    
+    public Page<Publisher> searchPublishers(String keyword, Pageable pageable) {
+        return publisherRepository.findByNameContainingIgnoreCaseOrAddressContainingIgnoreCase(keyword, keyword, pageable);
+    }
+
 
  
     public Publisher updatePublisher(Long id, Publisher publisherDetails) {

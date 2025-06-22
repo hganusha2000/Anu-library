@@ -16,6 +16,7 @@ public interface BorrowService {
 	void deleteBorrow(Long id);
 	
 	Page<Borrow> getAllBorrowRecords(Pageable pageable);
-
+	
+	Page<Borrow> searchBorrows(Long memberId, Long bookId, Boolean returned, Pageable pageable);
 
 }

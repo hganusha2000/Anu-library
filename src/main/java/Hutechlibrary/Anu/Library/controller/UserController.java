@@ -2,6 +2,7 @@ package Hutechlibrary.Anu.Library.controller;
 
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
+import Hutechlibrary.Anu.Library.dto.PageUserDetails;
 import Hutechlibrary.Anu.Library.dto.UserDetails;
 import Hutechlibrary.Anu.Library.entity.User;
 import Hutechlibrary.Anu.Library.service.UserService;
@@ -33,12 +34,18 @@ public class UserController {
         Page<User> userPage = userService.getAllUsers(pageable);
 
         // Create a custom response DTO with users and pagination metadata
-        UserDetails userPageResponse = new UserDetails(
-            userPage.getContent(),
-            userPage.getTotalPages(),
-            userPage.getTotalElements()
-        );
-
+        PageUserDetails userPageResponse = new PageUserDetails(
+        	    userPage.getContent().stream()
+        	        .map(user -> new UserDetails(
+        	            user.getId(),
+        	            user.getUsername(),
+        	            user.getEmail(),
+        	            user.isActivated(),
+        	            user.getCreatedAt()
+        	        )).toList(),  // ⬅ ensure you are converting to List<UserDetails>
+        	    userPage.getTotalPages(),
+        	    userPage.getTotalElements()
+        	);
         DataResponse response = new DataResponse(
             HttpStatus.OK.value(),
             "Users fetched successfully",

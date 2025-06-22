@@ -43,6 +43,18 @@ public class MemberServiceIMPL implements MemberService {
         return memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + id));
     }
+    
+    @Override
+    public Page<Member> searchMembers(String firstName, String lastName, String email, String phone, Pageable pageable) {
+        firstName = firstName != null ? firstName : "";
+        lastName = lastName != null ? lastName : "";
+        email = email != null ? email : "";
+        phone = phone != null ? phone : "";
+        
+        return memberRepository.findByFirstNameContainingIgnoreCaseAndLastNameContainingIgnoreCaseAndEmailContainingIgnoreCaseAndPhoneContainingIgnoreCase(
+            firstName, lastName, email, phone, pageable);
+    }
+
 
 
     public Member updateMember(Long id, Member memberDetails) {

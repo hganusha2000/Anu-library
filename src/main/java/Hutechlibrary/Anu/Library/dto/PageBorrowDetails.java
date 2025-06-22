@@ -10,10 +10,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class AuthorDetails {
+
+public class PageBorrowDetails {
 	
-	List<DataResponse> data;
-	  private int totalPages;
-	  private long totalElements;
+
+    private List<BorrowDetails> borrows;  // ✅ Correct field name
+    private int totalPages;
+    private long totalElements;
 	
+	
+
 }

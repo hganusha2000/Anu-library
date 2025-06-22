@@ -2,7 +2,6 @@ package Hutechlibrary.Anu.Library.dto;
 
 import java.util.List;
 
-import Hutechlibrary.Anu.Library.entity.Author;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,11 +10,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class BookDetails {
+
+public class LibraryDetails {
 	
     private Long id;
-    private String title;
-    private String author;  // Just the name
-    private String isbn;
-    private Boolean available;
+    private String name;
+    private String address;
+    private List<Long> bookIds;
+    private List<Long> userIds;
+    private List<Long> borrowIds;
+
 }

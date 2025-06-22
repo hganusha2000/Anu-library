@@ -19,6 +19,9 @@ public interface MemberService {
 	void deleteMember(Long id);
 	
 	Page<Member> getAllMembersPaginated(Pageable pageable);
+	
+	Page<Member> searchMembers(String firstName, String lastName, String email, String phone, Pageable pageable);
+
 
 
 }

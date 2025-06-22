@@ -48,12 +48,53 @@ public class PublisherController {
     }
 
 
+//    @GetMapping("/user/publishers")
+//    public ResponseEntity<ApiResponse> getAllPublishers(
+//            @RequestParam(name = "page", defaultValue = "0") int page,
+//            @RequestParam(name = "size", defaultValue = "10") int size) {
+//
+//        Page<Publisher> publisherPage = publisherService.getAllPublishers(PageRequest.of(page, size));
+//
+//        List<DataResponse> publisherDataList = publisherPage.getContent().stream()
+//                .map(p -> new DataResponse(HttpStatus.OK.value(), "Publisher data", p))
+//                .collect(Collectors.toList());
+//
+//        PublisherDetails details = new PublisherDetails();
+//        details.setData(publisherDataList);
+//        details.setTotalPages(publisherPage.getTotalPages());
+//        details.setTotalElements(publisherPage.getTotalElements());
+//
+//        DataResponse wrapper = new DataResponse(HttpStatus.OK.value(), "Publishers fetched successfully", details);
+//        ApiResponse response = new ApiResponse(wrapper);
+//
+//        return ResponseEntity.ok(response);
+//    }
+
+
+    @GetMapping("/user/publishers/{id}")
+    public ResponseEntity<ApiResponse> getPublisherById(@PathVariable("id") Long id) {
+        Publisher publisher = publisherService.getPublisherById(id);
+
+        DataResponse data = new DataResponse(HttpStatus.OK.value(), "Publisher fetched successfully", publisher);
+        ApiResponse response = new ApiResponse(data);
+
+        return ResponseEntity.ok(response);
+    }
+    
+    
     @GetMapping("/user/publishers")
     public ResponseEntity<ApiResponse> getAllPublishers(
             @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size) {
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "keyword", required = false) String keyword) {
 
-        Page<Publisher> publisherPage = publisherService.getAllPublishers(PageRequest.of(page, size));
+        Page<Publisher> publisherPage;
+
+        if (keyword != null && !keyword.isEmpty()) {
+            publisherPage = publisherService.searchPublishers(keyword, PageRequest.of(page, size));
+        } else {
+            publisherPage = publisherService.getAllPublishers(PageRequest.of(page, size));
+        }
 
         List<DataResponse> publisherDataList = publisherPage.getContent().stream()
                 .map(p -> new DataResponse(HttpStatus.OK.value(), "Publisher data", p))
@@ -70,16 +111,6 @@ public class PublisherController {
         return ResponseEntity.ok(response);
     }
 
-
-    @GetMapping("/user/publishers/{id}")
-    public ResponseEntity<ApiResponse> getPublisherById(@PathVariable("id") Long id) {
-        Publisher publisher = publisherService.getPublisherById(id);
-
-        DataResponse data = new DataResponse(HttpStatus.OK.value(), "Publisher fetched successfully", publisher);
-        ApiResponse response = new ApiResponse(data);
-
-        return ResponseEntity.ok(response);
-    }
 
     @PutMapping("/librarian/publishers/{id}")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")

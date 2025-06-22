@@ -34,14 +34,16 @@ public class Borrow {
     @ManyToOne
     @JoinColumn(name = "member_id")
     private Member member;
+    
+    @ManyToOne
+    @JoinColumn(name = "library_id")
+    private Library library;
 
-    private LocalDate borrowDate;
-    private LocalDate returnDate;
+	private LocalDateTime borrowDate = LocalDateTime.now();    
+	private LocalDateTime returnDate;
     private boolean returned;
     
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 }

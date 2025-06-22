@@ -6,7 +6,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,6 +32,12 @@ public class Book {
 
     private String title;
     private String isbn;
+    
+    @ManyToOne
+    @JoinColumn(name = "library_id")
+    @JsonBackReference(value = "library-book")
+    private Library library;
+
 
     @ManyToOne
     @JoinColumn(name = "author_id")
@@ -42,7 +50,10 @@ public class Book {
     private Publisher publisher;
 
     private int publicationYear;
-    private boolean available;
-    
-	private LocalDateTime createdAt = LocalDateTime.now();
+	private Integer totalCopies = 1;
+	private Integer availableCopies = 1;
+    	
+    @Column(name = "created_at", updatable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
+    private LocalDateTime createdAt;
 }

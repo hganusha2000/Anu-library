@@ -43,7 +43,4 @@ public class Author {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime recordedAt;
     
-	@Column(name = "deleted")
-	private Boolean deleted = false;
-    
 }

@@ -22,6 +22,9 @@ public interface AuthorService {
 	void deleteAuthor(Long id);
 
 	Page<Author> getAllAuthorsPaginated(Pageable pageable);
+	
+	Page<Author> searchAuthors(String name, String biography, Pageable pageable);
+
 	 
 	    
 	}

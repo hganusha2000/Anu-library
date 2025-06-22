@@ -74,6 +74,32 @@ public class MemberController {
 
         return ResponseEntity.ok(apiResponse);
     }
+    
+    @GetMapping("/librarian/members/search")
+    @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> searchMembers(
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Member> memberPage = memberService.searchMembers(firstName, lastName, email, phone, PageRequest.of(page, size));
+
+        List<DataResponse> memberDataList = memberPage.getContent().stream()
+                .map(member -> new DataResponse(HttpStatus.OK.value(), "Filtered member", member))
+                .toList();
+
+        MemberDetails memberDetails = new MemberDetails();
+        memberDetails.setData(memberDataList);
+        memberDetails.setTotalPages(memberPage.getTotalPages());
+        memberDetails.setTotalElements(memberPage.getTotalElements());
+
+        DataResponse dataResponse = new DataResponse(HttpStatus.OK.value(), "Filtered members fetched", memberDetails);
+        return ResponseEntity.ok(new ApiResponse(dataResponse));
+    }
+
 
 
     // GET a single member by ID – LIBRARIAN or ADMIN

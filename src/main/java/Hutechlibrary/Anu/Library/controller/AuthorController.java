@@ -93,6 +93,39 @@ public class AuthorController {
 
         return ResponseEntity.ok(response);
     }
+    
+    @GetMapping("/user/authors/search")
+    public ResponseEntity<ApiResponse> searchAuthors(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String biography,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Author> authorPage = authorService.searchAuthors(name, biography, PageRequest.of(page, size));
+
+        List<DataResponse> authorDataList = authorPage.getContent().stream()
+                .map(author -> new DataResponse(
+                        HttpStatus.OK.value(),
+                        "Filtered author data",
+                        author
+                ))
+                .toList();
+
+        AuthorDetails details = new AuthorDetails();
+        details.setData(authorDataList);
+        details.setTotalPages(authorPage.getTotalPages());
+        details.setTotalElements(authorPage.getTotalElements());
+
+        DataResponse dataResponse = new DataResponse(
+                HttpStatus.OK.value(),
+                "Filtered authors fetched successfully",
+                details
+        );
+
+        ApiResponse response = new ApiResponse(dataResponse);
+        return ResponseEntity.ok(response);
+    }
+
 
 
     @PutMapping("/librarian/authors/{id}")

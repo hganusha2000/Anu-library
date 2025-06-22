@@ -46,9 +46,8 @@ public class Member {
     @JsonBackReference
     private List<Borrow> borrows;
     
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+	private LocalDateTime createdAt = LocalDateTime.now();
+	private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+
 }

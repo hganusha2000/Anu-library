@@ -43,6 +43,16 @@ public class AuthorServiceIMPL implements AuthorService {
         return authorRepository.findById(id)
         	    .orElseThrow(() -> new ResourceNotFoundException("Author not found with id: " + id));
     }
+    
+    @Override
+    public Page<Author> searchAuthors(String name, String biography, Pageable pageable) {
+        return authorRepository.findByNameContainingIgnoreCaseAndBiographyContainingIgnoreCase(
+                name != null ? name : "",
+                biography != null ? biography : "",
+                pageable
+        );
+    }
+
 
     @Override
     public Author updateAuthor(Long id, Author authorDetails) {
@@ -55,7 +65,6 @@ public class AuthorServiceIMPL implements AuthorService {
     @Override
     public void deleteAuthor(Long id) {
         Author author = getAuthorById(id);
-        author.setDeleted(true);
-        authorRepository.save(author); //soft delete
+        authorRepository.delete(author);
     }
 }

@@ -22,6 +22,9 @@ public interface BookService {
 	void deleteBook(Long id);
 
 	Page<Book> getAllBooksPaginated(Pageable pageable);
+	
+	Page<Book> searchBooks(String title, String isbn, String authorName, Pageable pageable);
+
 
 
 }

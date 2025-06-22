@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
 import Hutechlibrary.Anu.Library.dto.BookDetails;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
+import Hutechlibrary.Anu.Library.dto.PageBookDetails;
 import Hutechlibrary.Anu.Library.entity.Book;
 import Hutechlibrary.Anu.Library.service.BookService;
 import jakarta.validation.Valid;
@@ -52,16 +53,20 @@ public class BookController {
 
         Page<Book> bookPage = bookService.getAllBooksPaginated(PageRequest.of(page, size));
 
-        List<DataResponse> bookDataList = bookPage.getContent().stream()
-                .map(book -> new DataResponse(
-                        HttpStatus.OK.value(),
-                        "Book data",
-                        book
-                ))
+        List<BookDetails> bookList = bookPage.getContent().stream()
+                .map(book -> {
+                    BookDetails dto = new BookDetails();
+                    dto.setId(book.getId());
+                    dto.setTitle(book.getTitle());
+                    dto.setIsbn(book.getIsbn());
+                    dto.setAvailable(book.getAvailableCopies() != null && book.getAvailableCopies() > 0); // ✅ Inline check
+                    dto.setAuthor(book.getAuthor() != null ? book.getAuthor().getName() : ""); // Avoid NullPointerException
+                    return dto;
+                })
                 .toList();
 
-        BookDetails details = new BookDetails();
-        details.setData(bookDataList);
+        PageBookDetails details = new PageBookDetails();
+        details.setBooks(bookList);
         details.setTotalPages(bookPage.getTotalPages());
         details.setTotalElements(bookPage.getTotalElements());
 
@@ -71,9 +76,9 @@ public class BookController {
                 details
         );
 
-        ApiResponse response = new ApiResponse(dataResponse);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ApiResponse(dataResponse));
     }
+
 
 
     @GetMapping("/user/books/{id}")
@@ -90,6 +95,37 @@ public class BookController {
 
         return ResponseEntity.ok(apiResponse);
     }
+    
+    @GetMapping("/user/books/search")
+    public ResponseEntity<ApiResponse> searchBooks(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String isbn,
+            @RequestParam(required = false) String authorName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Book> bookPage = bookService.searchBooks(title, isbn, authorName, PageRequest.of(page, size));
+
+        List<BookDetails> bookList = bookPage.getContent().stream()
+                .map(book -> {
+                    BookDetails dto = new BookDetails();
+                    dto.setId(book.getId());
+                    dto.setTitle(book.getTitle());
+                    dto.setIsbn(book.getIsbn());
+                    dto.setAvailable(book.getAvailableCopies() != null && book.getAvailableCopies() > 0);
+                    dto.setAuthor(book.getAuthor() != null ? book.getAuthor().getName() : "");
+                    return dto;
+                }).toList();
+
+        PageBookDetails details = new PageBookDetails();
+        details.setBooks(bookList);
+        details.setTotalPages(bookPage.getTotalPages());
+        details.setTotalElements(bookPage.getTotalElements());
+
+        DataResponse dataResponse = new DataResponse(HttpStatus.OK.value(), "Books filtered successfully", details);
+        return ResponseEntity.ok(new ApiResponse(dataResponse));
+    }
+
 
 
   

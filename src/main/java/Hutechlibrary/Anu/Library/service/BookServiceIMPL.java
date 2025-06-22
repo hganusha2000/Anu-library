@@ -50,6 +50,18 @@ public class BookServiceIMPL implements BookService {
         return bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
     }
+    
+    @Override
+    public Page<Book> searchBooks(String title, String isbn, String authorName, Pageable pageable) {
+        title = title != null ? title : "";
+        isbn = isbn != null ? isbn : "";
+        authorName = authorName != null ? authorName : "";
+
+        return bookRepository.findByTitleContainingIgnoreCaseAndIsbnContainingIgnoreCaseAndAuthor_NameContainingIgnoreCase(
+                title, isbn, authorName, pageable
+        );
+    }
+
 
     public Book updateBook(Long id, Book bookDetails) {
         Book book = getBookById(id);
@@ -58,10 +70,10 @@ public class BookServiceIMPL implements BookService {
         book.setAuthor(bookDetails.getAuthor());
         book.setPublisher(bookDetails.getPublisher());
         book.setPublicationYear(bookDetails.getPublicationYear());
-        book.setAvailable(bookDetails.isAvailable());
+        book.setTotalCopies(bookDetails.getTotalCopies());
+        book.setAvailableCopies(bookDetails.getAvailableCopies());
         return bookRepository.save(book);
     }
-
     public void deleteBook(Long id) {
         Book book = getBookById(id);
         bookRepository.delete(book);

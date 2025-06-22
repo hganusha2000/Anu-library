@@ -31,7 +31,6 @@ public class BorrowServiceIMPL implements BorrowService{
 	    
 	    
 
-	    // ✅ Save borrow record using full Borrow object from POST body
 	    public Borrow createBorrow(Borrow borrow) {
 	        Long bookId = borrow.getBook().getId();
 	        Long memberId = borrow.getMember().getId();
@@ -41,32 +40,42 @@ public class BorrowServiceIMPL implements BorrowService{
 	        Member member = memberRepository.findById(memberId)
 	                .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + memberId));
 
-	        if (!book.isAvailable()) {
-	            throw new IllegalStateException("Book is not available");
+	        // Check if there are available copies
+	        if (book.getAvailableCopies() == null || book.getAvailableCopies() <= 0) {
+	            throw new IllegalStateException("No available copies for this book");
 	        }
 
+	        // Set borrow data
 	        borrow.setBook(book);
 	        borrow.setMember(member);
-	        borrow.setBorrowDate(LocalDate.now());
+	        borrow.setBorrowDate(LocalDate.now().atStartOfDay());
 	        borrow.setReturned(false);
 
-	        book.setAvailable(false);
-	        bookRepository.save(book);
+	        // Decrement available copies
+	        book.setAvailableCopies(book.getAvailableCopies() - 1);
 
+	        bookRepository.save(book);
 	        return borrowRepository.save(borrow);
-	        
 	    }
+
 	    
 	    // ✅ Return all borrow records
 	    @Override
 	    public Page<Borrow> getAllBorrowRecords(Pageable pageable) {
 	        return borrowRepository.findAll(pageable);
 	    }
+	    
 
 	    public Borrow getBorrowById(Long id) {
 	        return borrowRepository.findById(id)
 	                .orElseThrow(() -> new ResourceNotFoundException("Borrow not found with id: " + id));
 	    }
+	    
+	    @Override
+	    public Page<Borrow> searchBorrows(Long memberId, Long bookId, Boolean returned, Pageable pageable) {
+	        return borrowRepository.findByFilters(memberId, bookId, returned, pageable);
+	    }
+
 
 
 	    // ✅ Update borrow record
@@ -96,7 +105,7 @@ public class BorrowServiceIMPL implements BorrowService{
 	        // Make book available again on deletion
 	        Book book = borrow.getBook();
 	        if (book != null) {
-	            book.setAvailable(true);
+	        	book.setAvailableCopies(book.getAvailableCopies() + 1); 
 	            bookRepository.save(book);
 	        }
 
@@ -110,10 +119,10 @@ public class BorrowServiceIMPL implements BorrowService{
 	            throw new IllegalStateException("Book already returned");
 	        }
 	        borrow.setReturned(true);
-	        borrow.setReturnDate(LocalDate.now());
+	        borrow.setReturnDate(LocalDate.now().atStartOfDay()); // ✅ converts LocalDate to LocalDateTime
 
 	        Book book = borrow.getBook();
-	        book.setAvailable(true);
+	        book.setAvailableCopies(book.getAvailableCopies() + 1); 
 	        bookRepository.save(book);
 
 	        return borrowRepository.save(borrow);

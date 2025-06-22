@@ -19,5 +19,8 @@ public interface PublisherService {
 	void deletePublisher(Long id);
 
 	Page<Publisher> getAllPublishers(Pageable pageable);
+	
+	Page<Publisher> searchPublishers(String keyword, Pageable pageable);
+
 
 }

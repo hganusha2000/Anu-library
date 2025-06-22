@@ -43,6 +43,10 @@ public class User {
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;
+    
+    @ManyToOne
+    @JoinColumn(name = "library_id")
+    private Library library;
 
     @Column(name = "activation_token")
     private String activationToken;
@@ -58,9 +62,7 @@ public class User {
     )
     private Set<Role> roles;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+	private LocalDateTime createdAt = LocalDateTime.now();
+	private LocalDateTime updatedAt = LocalDateTime.now(); 
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-}
+	}

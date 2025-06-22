@@ -1,5 +1,6 @@
 package Hutechlibrary.Anu.Library.dto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import Hutechlibrary.Anu.Library.entity.User;
@@ -13,7 +14,9 @@ import lombok.NoArgsConstructor;
 
 public class UserDetails  {
 
-    private List<User> data;     // Changed from List<DataResponse> to List<User>
-    private int totalPages;
-    private long totalElements;
+    private Long id;
+    private String username;
+    private String email;
+    private boolean isActivated;
+    private LocalDateTime createdAt;
 }
