@@ -6,7 +6,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import Hutechlibrary.Anu.Library.dto.DataResponse;
+import Hutechlibrary.Anu.Library.dto.MemberResponseDTO;
 import Hutechlibrary.Anu.Library.entity.Member;
+import jakarta.validation.Valid;
 
 public interface MemberService {
 
@@ -21,6 +23,10 @@ public interface MemberService {
 	Page<Member> getAllMembersPaginated(Pageable pageable);
 	
 	Page<Member> searchMembers(String firstName, String lastName, String email, String phone, Pageable pageable);
+
+	Member createMemberEntity(@Valid Member member);
+
+	MemberResponseDTO convertToDTO(Member member);
 
 
 

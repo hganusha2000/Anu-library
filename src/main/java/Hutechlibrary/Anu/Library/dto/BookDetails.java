@@ -13,9 +13,8 @@ import lombok.NoArgsConstructor;
 
 public class BookDetails {
 	
-    private Long id;
-    private String title;
-    private String author;  // Just the name
-    private String isbn;
-    private Boolean available;
+	
+    private int status;
+    private String message;
+    private Object Books;
 }

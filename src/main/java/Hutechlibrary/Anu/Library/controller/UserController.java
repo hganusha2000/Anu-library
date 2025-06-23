@@ -1,9 +1,10 @@
 package Hutechlibrary.Anu.Library.controller;
 
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
+import Hutechlibrary.Anu.Library.dto.ApiResponseUser;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
-import Hutechlibrary.Anu.Library.dto.PageUserDetails;
 import Hutechlibrary.Anu.Library.dto.UserDetails;
+import Hutechlibrary.Anu.Library.dto.UserResponseDTO;
 import Hutechlibrary.Anu.Library.entity.User;
 import Hutechlibrary.Anu.Library.service.UserService;
 
@@ -17,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -26,40 +28,44 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse> getAllUsers(
+    public ResponseEntity<ApiResponseUser> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<User> userPage = userService.getAllUsers(pageable);
+        Page<User> userPage = userService.getAllUsers(PageRequest.of(page, size));
 
-        // Create a custom response DTO with users and pagination metadata
-        PageUserDetails userPageResponse = new PageUserDetails(
-        	    userPage.getContent().stream()
-        	        .map(user -> new UserDetails(
-        	            user.getId(),
-        	            user.getUsername(),
-        	            user.getEmail(),
-        	            user.isActivated(),
-        	            user.getCreatedAt()
-        	        )).toList(),  // ⬅ ensure you are converting to List<UserDetails>
-        	    userPage.getTotalPages(),
-        	    userPage.getTotalElements()
-        	);
-        DataResponse response = new DataResponse(
-            HttpStatus.OK.value(),
-            "Users fetched successfully",
-            userPageResponse
+        List<UserResponseDTO> dtoList = userPage.getContent().stream()
+                .map(user -> new UserResponseDTO(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.isActivated(),
+                        user.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+
+        ApiResponseUser response = new ApiResponseUser(
+                HttpStatus.OK.value(),
+                "fetched successfully",
+                dtoList,
+                userPage.getTotalPages(),
+                userPage.getTotalElements()
         );
 
-        return ResponseEntity.ok(new ApiResponse(response));
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse> deleteUser(@PathVariable("id") String id) {
+    public ResponseEntity<UserDetails> deleteUser(@PathVariable("id") String id) {
         userService.deleteUser(id);
-        DataResponse response = new DataResponse(HttpStatus.OK.value(), "User deleted successfully", null);
-        return ResponseEntity.ok(new ApiResponse(response));
+
+        UserDetails response = new UserDetails(
+                HttpStatus.OK.value(),
+                "User deleted successfully",
+                null
+        );
+
+        return ResponseEntity.ok(response);
     }
 }

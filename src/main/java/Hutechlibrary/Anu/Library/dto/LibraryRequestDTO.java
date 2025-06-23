@@ -1,7 +1,5 @@
 package Hutechlibrary.Anu.Library.dto;
 
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,10 +8,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class MemberDetails {
-
-    private int status;
-    private String message;
-    private Object members;
+public class LibraryRequestDTO {
+	
+    private String name;
+    private String address;
 	
 }

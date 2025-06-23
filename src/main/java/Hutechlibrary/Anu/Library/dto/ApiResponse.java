@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 
 public class ApiResponse {
 
-	private DataResponse data;
+	private List<AuthorDetails> authors;
+	private int totalPages;
+	private long totalElements;
     
 }

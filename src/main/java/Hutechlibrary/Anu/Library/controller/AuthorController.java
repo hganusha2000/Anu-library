@@ -1,6 +1,7 @@
 package Hutechlibrary.Anu.Library.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
 import Hutechlibrary.Anu.Library.dto.AuthorDetails;
+import Hutechlibrary.Anu.Library.dto.AuthorResponseDTO;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
 import Hutechlibrary.Anu.Library.entity.Author;
 import Hutechlibrary.Anu.Library.service.AuthorService;
@@ -31,69 +33,60 @@ public class AuthorController {
 
     @Autowired
     private AuthorService authorService;
-    
+
     @PostMapping("/librarian/authors")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> createAuthor(@Valid @RequestBody Author author) {
-        DataResponse createdAuthorResponse = authorService.createAuthor(author);
-        ApiResponse response = new ApiResponse(createdAuthorResponse);
+    public ResponseEntity<AuthorDetails> createAuthor(@Valid @RequestBody Author author) {
+        Author createdAuthor = authorService.createAuthorEntity(author);
+        AuthorResponseDTO dto = authorService.convertToDto(createdAuthor);
 
-        if (createdAuthorResponse.getStatus() == HttpStatus.CONFLICT.value()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-        }
+        AuthorDetails response = new AuthorDetails(
+                HttpStatus.CREATED.value(),
+                "Author created successfully",
+                dto
+        );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    
-
     @GetMapping("/user/authors")
     public ResponseEntity<ApiResponse> getAllAuthorsPaginated(
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         Page<Author> authorPage = authorService.getAllAuthorsPaginated(PageRequest.of(page, size));
 
-        List<DataResponse> authorDataList = authorPage.getContent().stream()
-                .map(author -> new DataResponse(
+        List<AuthorDetails> authorDetailsList = authorPage.getContent().stream()
+                .map(author -> new AuthorDetails(
                         HttpStatus.OK.value(),
-                        "Author data",
-                        author
+                        "Author fetched successfully",
+                        authorService.convertToDto(author)
                 ))
-                .toList();
+                .collect(Collectors.toList());
 
-        AuthorDetails details = new AuthorDetails();
-        details.setData(authorDataList);
-        details.setTotalPages(authorPage.getTotalPages());
-        details.setTotalElements(authorPage.getTotalElements());
-
-        DataResponse dataResponse = new DataResponse(
-                HttpStatus.OK.value(),
-                "Authors fetched successfully",
-                details
+        ApiResponse response = new ApiResponse(
+                authorDetailsList,
+                authorPage.getTotalPages(),
+                authorPage.getTotalElements()
         );
 
-        ApiResponse response = new ApiResponse(dataResponse);
-
         return ResponseEntity.ok(response);
     }
-    
 
     @GetMapping("/user/authors/{id}")
-    public ResponseEntity<ApiResponse> getAuthorById(@PathVariable("id") Long id) {
+    public ResponseEntity<AuthorDetails> getAuthorById(@PathVariable Long id) {
         Author author = authorService.getAuthorById(id);
-        
-        DataResponse dataResponse = new DataResponse();
-        dataResponse.setStatus(HttpStatus.OK.value());
-        dataResponse.setMessage("Author fetched successfully");
-        dataResponse.setData(author);
-        
-        ApiResponse response = new ApiResponse();
-        response.setData(dataResponse);
+        AuthorResponseDTO dto = authorService.convertToDto(author);
+
+        AuthorDetails response = new AuthorDetails(
+                HttpStatus.OK.value(),
+                "Author fetched successfully",
+                dto
+        );
 
         return ResponseEntity.ok(response);
     }
-    
+
     @GetMapping("/user/authors/search")
     public ResponseEntity<ApiResponse> searchAuthors(
             @RequestParam(required = false) String name,
@@ -103,62 +96,47 @@ public class AuthorController {
 
         Page<Author> authorPage = authorService.searchAuthors(name, biography, PageRequest.of(page, size));
 
-        List<DataResponse> authorDataList = authorPage.getContent().stream()
-                .map(author -> new DataResponse(
+        List<AuthorDetails> authorDetailsList = authorPage.getContent().stream()
+                .map(author -> new AuthorDetails(
                         HttpStatus.OK.value(),
-                        "Filtered author data",
-                        author
+                        "Filtered author",
+                        authorService.convertToDto(author)
                 ))
-                .toList();
+                .collect(Collectors.toList());
 
-        AuthorDetails details = new AuthorDetails();
-        details.setData(authorDataList);
-        details.setTotalPages(authorPage.getTotalPages());
-        details.setTotalElements(authorPage.getTotalElements());
-
-        DataResponse dataResponse = new DataResponse(
-                HttpStatus.OK.value(),
-                "Filtered authors fetched successfully",
-                details
+        ApiResponse response = new ApiResponse(
+                authorDetailsList,
+                authorPage.getTotalPages(),
+                authorPage.getTotalElements()
         );
 
-        ApiResponse response = new ApiResponse(dataResponse);
         return ResponseEntity.ok(response);
     }
 
-
-
     @PutMapping("/librarian/authors/{id}")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> updateAuthor(@PathVariable("id") Long id, @RequestBody Author authorDetails) {
+    public ResponseEntity<AuthorDetails> updateAuthor(@PathVariable Long id, @RequestBody Author authorDetails) {
         Author updatedAuthor = authorService.updateAuthor(id, authorDetails);
+        AuthorResponseDTO dto = authorService.convertToDto(updatedAuthor);
 
-        DataResponse dataResponse = new DataResponse();
-        dataResponse.setStatus(HttpStatus.OK.value());
-        dataResponse.setMessage("Author updated successfully");
-        dataResponse.setData(updatedAuthor);
+        AuthorDetails response = new AuthorDetails(
+                HttpStatus.OK.value(),
+                "Author updated successfully",
+                dto
+        );
 
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setData(dataResponse);
-
-        return ResponseEntity.ok(apiResponse);
+        return ResponseEntity.ok(response);
     }
-
 
     @DeleteMapping("/admin/authors/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> deleteAuthor(@PathVariable("id") Long id) {
+    public ResponseEntity<AuthorDetails> deleteAuthor(@PathVariable Long id) {
         authorService.deleteAuthor(id);
-
-        DataResponse dataResponse = new DataResponse();
-        dataResponse.setStatus(HttpStatus.OK.value());
-        dataResponse.setMessage("Author deleted successfully");
-        dataResponse.setData(null); // No body needed
-
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setData(dataResponse);
-
-        return ResponseEntity.ok(apiResponse);
+        AuthorDetails response = new AuthorDetails(
+                HttpStatus.OK.value(),
+                "Author deleted successfully",
+                null
+        );
+        return ResponseEntity.ok(response);
     }
-
 }

@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 
 public class PublisherDetails {
-	List<DataResponse> data;
-	private int totalPages;
-    private long totalElements;
+    private int status;
+    private String message;
+    private Object Publishers;
 }
 		

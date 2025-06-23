@@ -2,6 +2,7 @@ package Hutechlibrary.Anu.Library.dto;
 
 import java.util.List;
 
+import Hutechlibrary.Anu.Library.entity.Author;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,8 +13,8 @@ import lombok.NoArgsConstructor;
 
 public class AuthorDetails {
 	
-	List<DataResponse> data;
-	  private int totalPages;
-	  private long totalElements;
+    private int status;
+    private String message;
+    private Object authors;
 	
 }

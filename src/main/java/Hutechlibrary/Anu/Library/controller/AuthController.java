@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
+import Hutechlibrary.Anu.Library.dto.ApiResponse1;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
 import Hutechlibrary.Anu.Library.dto.LoginRequest;
 import Hutechlibrary.Anu.Library.dto.RegisterRequest;
@@ -44,25 +45,25 @@ public class AuthController {
     private UserDetailsService userDetailsService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse1> login(@Valid @RequestBody LoginRequest request) {
         try {
             authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
         } catch (AuthenticationException e) {
             DataResponse error = new DataResponse(HttpStatus.UNAUTHORIZED.value(), "Invalid credentials", null);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse(error));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse1(error));
         }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
         String token = jwtService.generateToken(userDetails);
 
         DataResponse success = new DataResponse(HttpStatus.OK.value(), "Login successful", Map.of("token", token));
-        return ResponseEntity.ok(new ApiResponse(success));
+        return ResponseEntity.ok(new ApiResponse1(success));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse> register(@Valid @RequestBody RegisterRequest registerRequest) throws MessagingException {
+    public ResponseEntity<ApiResponse1> register(@Valid @RequestBody RegisterRequest registerRequest) throws MessagingException {
         try {
             User user = userService.registerUser(registerRequest);
 
@@ -75,23 +76,23 @@ public class AuthController {
             };
 
             DataResponse dataResponse = new DataResponse(HttpStatus.CREATED.value(), message, user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(dataResponse));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse1(dataResponse));
 
         } catch (IllegalArgumentException e) {
             DataResponse error = new DataResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null);
-            return ResponseEntity.badRequest().body(new ApiResponse(error));
+            return ResponseEntity.badRequest().body(new ApiResponse1(error));
         }
     }
     
     @GetMapping("/activate")
-    public ResponseEntity<ApiResponse> activateAccount(@RequestParam String token) {
+    public ResponseEntity<ApiResponse1> activateAccount(@RequestParam String token) {
         try {
             userService.activateUser(token);
             DataResponse dataResponse = new DataResponse(HttpStatus.OK.value(), "Account activated successfully", null);
-            return ResponseEntity.ok(new ApiResponse(dataResponse));
+            return ResponseEntity.ok(new ApiResponse1(dataResponse));
         } catch (IllegalArgumentException e) {
             DataResponse error = new DataResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null);
-            return ResponseEntity.badRequest().body(new ApiResponse(error));
+            return ResponseEntity.badRequest().body(new ApiResponse1(error));
         }
     }
 }

@@ -13,6 +13,8 @@ import Hutechlibrary.Anu.Library.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,146 +23,50 @@ import java.util.stream.Collectors;
 @Service
 public class LibraryServiceIMPL implements LibraryService {
 
-    @Autowired
-    private LibraryRepository libraryRepository;
-
-    @Autowired
-    private BookRepository bookRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private BorrowRepository borrowRepository;
+    @Autowired private LibraryRepository libRepo;
 
     @Override
-    public ApiResponse createLibrary(LibraryDetails libraryDetails) {
-        Library library = new Library();
-        library.setName(libraryDetails.getName());
-        library.setAddress(libraryDetails.getAddress());
-
-        library = libraryRepository.save(library);
-
-        return successResponse("Library created successfully", mapToDetails(library));
+    public Library createLibrary(LibraryRequestDTO req) {
+        Library lib = new Library();
+        lib.setName(req.getName());
+        lib.setAddress(req.getAddress());
+        return libRepo.save(lib);
     }
 
     @Override
-    public ApiResponse getLibraryById(Long id) {
-        Library library = libraryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Library not found"));
-        return successResponse("Library fetched successfully", mapToDetails(library));
+    public Page<Library> listLibraries(Pageable pageable) {
+        return libRepo.findAll(pageable);
     }
 
     @Override
-    public ApiResponse getAllLibraries() {
-        List<LibraryDetails> libraries = libraryRepository.findAll()
-                .stream()
-                .map(this::mapToDetails)
-                .collect(Collectors.toList());
-        return successResponse("All libraries fetched successfully", libraries);
+    public Library getLibrary(Long id) {
+        return libRepo.findById(id).orElseThrow(() ->
+            new EntityNotFoundException("Library not found with id: " + id));
     }
 
     @Override
-    public ApiResponse updateLibrary(Long id, LibraryDetails libraryDetails) {
-        Library library = libraryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Library not found"));
-
-        library.setName(libraryDetails.getName());
-        library.setAddress(libraryDetails.getAddress());
-        library = libraryRepository.save(library);
-
-        return successResponse("Library updated successfully", mapToDetails(library));
+    public Library updateLibrary(Long id, LibraryRequestDTO req) {
+        Library lib = getLibrary(id);
+        lib.setName(req.getName());
+        lib.setAddress(req.getAddress());
+        return libRepo.save(lib);
     }
 
     @Override
-    public ApiResponse deleteLibrary(Long id) {
-        Library library = libraryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Library not found"));
-        libraryRepository.delete(library);
-        return successResponse("Library deleted successfully", null);
+    public void deleteLibrary(Long id) {
+        Library lib = getLibrary(id);
+        libRepo.delete(lib);
     }
 
     @Override
-    public ApiResponse getBooksInLibrary(Long libraryId) {
-        Library library = libraryRepository.findById(libraryId)
-                .orElseThrow(() -> new EntityNotFoundException("Library not found"));
-
-        List<BookDetails> books = library.getBooks().stream().map(book -> {
-            BookDetails dto = new BookDetails();
-            dto.setId(book.getId());
-            dto.setTitle(book.getTitle());
-            // ✅ Extract author name safely
-            dto.setAuthor(book.getAuthor() != null ? book.getAuthor().getName() : null);
-            dto.setIsbn(book.getIsbn());
-            dto.setAvailable(book.getAvailableCopies() != null && book.getAvailableCopies() > 0); // ✅ Inline check
-            return dto;
-        }).collect(Collectors.toList());
-
-        return successResponse("Books in library fetched successfully", books);
-    }
-
-
-    @Override
-    public ApiResponse getUsersInLibrary(Long libraryId) {
-        Library library = libraryRepository.findById(libraryId)
-                .orElseThrow(() -> new EntityNotFoundException("Library not found"));
-
-        List<UserDetails> users = library.getUsers().stream().map(user -> {
-            UserDetails dto = new UserDetails();
-            dto.setId(user.getId());
-            dto.setUsername(user.getUsername());
-            dto.setEmail(user.getEmail());
-            dto.setActivated(user.isActivated());   // ✅ include activation status
-            dto.setCreatedAt(user.getCreatedAt());  // ✅ include account creation time
-            return dto;
-        }).collect(Collectors.toList());
-
-        return successResponse("Users in library fetched successfully", users);
-    }
-
-    @Override
-    public ApiResponse getBorrowsInLibrary(Long libraryId) {
-        Library library = libraryRepository.findById(libraryId)
-                .orElseThrow(() -> new EntityNotFoundException("Library not found"));
-
-        List<BorrowDetails> borrows = library.getBorrows().stream().map(borrow -> {
-            BorrowDetails dto = new BorrowDetails();
-            dto.setId(borrow.getId());
-            dto.setBorrowDate(borrow.getBorrowDate());
-            dto.setReturnDate(borrow.getReturnDate().toLocalDate());
-            dto.setMemberId(borrow.getMember().getId());
-            dto.setBookId(borrow.getBook().getId());
-            return dto;
-        }).collect(Collectors.toList());
-
-        return successResponse("Borrow records fetched successfully", borrows);
-    }
-
-    // Maps entity to LibraryDetails DTO
-    private LibraryDetails mapToDetails(Library library) {
-        LibraryDetails dto = new LibraryDetails();
-        dto.setId(library.getId());
-        dto.setName(library.getName());
-        dto.setAddress(library.getAddress());
-
-        dto.setBookIds(library.getBooks() != null ?
-                library.getBooks().stream().map(Book::getId).collect(Collectors.toList()) : List.of());
-
-        dto.setUserIds(library.getUsers() != null ?
-                library.getUsers().stream().map(User::getId).collect(Collectors.toList()) : List.of());
-
-        dto.setBorrowIds(library.getBorrows() != null ?
-                library.getBorrows().stream().map(Borrow::getId).collect(Collectors.toList()) : List.of());
-
-        return dto;
-    }
-
-    // Wraps data in an ApiResponse
-    private ApiResponse successResponse(String message, Object data) {
-        DataResponse response = new DataResponse();
-        response.setStatus(200);
-        response.setMessage(message);
-        response.setData(data);
-        return new ApiResponse(response);
+    public LibraryResponseDTO toResponseDTO(Library lib) {
+        return new LibraryResponseDTO(
+            lib.getId(),
+            lib.getName(),
+            lib.getAddress(),
+            lib.getBooks().stream().map(Book::getId).collect(Collectors.toList()),
+            lib.getUsers().stream().map(User::getId).collect(Collectors.toList()),
+            lib.getBorrows().stream().map(Borrow::getId).collect(Collectors.toList())
+        );
     }
 }

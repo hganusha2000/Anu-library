@@ -10,10 +10,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class MemberDetails {
-
-    private int status;
-    private String message;
-    private Object members;
+public class ApiResponseLibrary {
 	
+	private List<LibraryDetails> data;
+	private int totalPages;
+	private long totalElements;
+
+
 }

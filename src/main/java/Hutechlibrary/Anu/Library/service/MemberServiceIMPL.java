@@ -9,12 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import Hutechlibrary.Anu.Library.dto.DataResponse;
+import Hutechlibrary.Anu.Library.dto.MemberResponseDTO;
 import Hutechlibrary.Anu.Library.entity.Member;
 import Hutechlibrary.Anu.Library.exception.ResourceNotFoundException;
 import Hutechlibrary.Anu.Library.repository.MemberRepository;
 
-@Service
 
+@Service
 public class MemberServiceIMPL implements MemberService {
 	
 	@Autowired
@@ -31,7 +32,8 @@ public class MemberServiceIMPL implements MemberService {
 	    }
 
 	    Member savedMember = memberRepository.save(member);
-	    return new DataResponse(HttpStatus.CREATED.value(), "Member created successfully", savedMember);
+	    MemberResponseDTO dto = convertToDTO(savedMember);
+	    return new DataResponse(HttpStatus.CREATED.value(), "Member created successfully", dto);
 	}
 
     @Override
@@ -39,6 +41,7 @@ public class MemberServiceIMPL implements MemberService {
         return memberRepository.findAll(pageable);
     }
     
+    @Override
     public Member getMemberById(Long id) {
         return memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + id));
@@ -55,8 +58,7 @@ public class MemberServiceIMPL implements MemberService {
             firstName, lastName, email, phone, pageable);
     }
 
-
-
+    @Override
     public Member updateMember(Long id, Member memberDetails) {
         Member member = getMemberById(id);
         member.setFirstName(memberDetails.getFirstName());
@@ -66,11 +68,27 @@ public class MemberServiceIMPL implements MemberService {
         return memberRepository.save(member);
     }
 
+    @Override
     public void deleteMember(Long id) {
         Member member = getMemberById(id);
         memberRepository.delete(member);
     }
 
+    @Override
+    public Member createMemberEntity(Member member) {
+        return memberRepository.save(member);
+    }
 
+    @Override
+    public MemberResponseDTO convertToDTO(Member member) {
+        MemberResponseDTO dto = new MemberResponseDTO();
+        dto.setId(member.getId());
+        dto.setFirstName(member.getFirstName());
+        dto.setLastName(member.getLastName());
+        dto.setEmail(member.getEmail());
+        dto.setPhone(member.getPhone());
+        dto.setCreatedAt(member.getCreatedAt());
+        dto.setUpdatedAt(member.getUpdatedAt());
+        return dto;
+    }
 }
-

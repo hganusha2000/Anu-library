@@ -1,6 +1,6 @@
 package Hutechlibrary.Anu.Library.dto;
 
-import java.util.List;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,11 +10,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 
-
-public class LibraryDetails {
+public class BookResponseDTO {
 	
-    private int status;
-    private String message;
-    private Object libraries;
+    private Long id;
+    private String title;
+    private String author;  // Just the name
+    private String isbn;
+    private Boolean available;
 
 }

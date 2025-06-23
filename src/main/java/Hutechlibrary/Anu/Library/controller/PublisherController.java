@@ -20,8 +20,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
+import Hutechlibrary.Anu.Library.dto.ApiResponsePublisher;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
 import Hutechlibrary.Anu.Library.dto.PublisherDetails;
+import Hutechlibrary.Anu.Library.dto.PublisherResponseDTO;
 import Hutechlibrary.Anu.Library.entity.Publisher;
 import Hutechlibrary.Anu.Library.service.PublisherService;
 
@@ -31,106 +33,83 @@ public class PublisherController {
 
     @Autowired
     private PublisherService publisherService;
-    
-    
+
     @PostMapping("/librarian/publishers")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> createPublisher(@RequestBody Publisher publisher) {
-        DataResponse responseData = publisherService.createPublisher(publisher);
-
-        ApiResponse response = new ApiResponse(responseData);
-
-        if (responseData.getStatus() == HttpStatus.CONFLICT.value()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-        }
-
+    public ResponseEntity<PublisherDetails> createPublisher(@RequestBody Publisher publisher) {
+        Publisher created = publisherService.createPublisherEntity(publisher);
+        PublisherResponseDTO dto = publisherService.convertToDTO(created);
+        PublisherDetails response = new PublisherDetails(HttpStatus.CREATED.value(), "Publisher created successfully", dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-
-//    @GetMapping("/user/publishers")
-//    public ResponseEntity<ApiResponse> getAllPublishers(
-//            @RequestParam(name = "page", defaultValue = "0") int page,
-//            @RequestParam(name = "size", defaultValue = "10") int size) {
-//
-//        Page<Publisher> publisherPage = publisherService.getAllPublishers(PageRequest.of(page, size));
-//
-//        List<DataResponse> publisherDataList = publisherPage.getContent().stream()
-//                .map(p -> new DataResponse(HttpStatus.OK.value(), "Publisher data", p))
-//                .collect(Collectors.toList());
-//
-//        PublisherDetails details = new PublisherDetails();
-//        details.setData(publisherDataList);
-//        details.setTotalPages(publisherPage.getTotalPages());
-//        details.setTotalElements(publisherPage.getTotalElements());
-//
-//        DataResponse wrapper = new DataResponse(HttpStatus.OK.value(), "Publishers fetched successfully", details);
-//        ApiResponse response = new ApiResponse(wrapper);
-//
-//        return ResponseEntity.ok(response);
-//    }
-
-
-    @GetMapping("/user/publishers/{id}")
-    public ResponseEntity<ApiResponse> getPublisherById(@PathVariable("id") Long id) {
-        Publisher publisher = publisherService.getPublisherById(id);
-
-        DataResponse data = new DataResponse(HttpStatus.OK.value(), "Publisher fetched successfully", publisher);
-        ApiResponse response = new ApiResponse(data);
-
-        return ResponseEntity.ok(response);
-    }
-    
-    
     @GetMapping("/user/publishers")
-    public ResponseEntity<ApiResponse> getAllPublishers(
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size,
-            @RequestParam(name = "keyword", required = false) String keyword) {
+    public ResponseEntity<ApiResponsePublisher> getAllPublishers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        Page<Publisher> publisherPage;
+        Page<Publisher> publisherPage = publisherService.getAllPublishers(PageRequest.of(page, size));
 
-        if (keyword != null && !keyword.isEmpty()) {
-            publisherPage = publisherService.searchPublishers(keyword, PageRequest.of(page, size));
-        } else {
-            publisherPage = publisherService.getAllPublishers(PageRequest.of(page, size));
-        }
-
-        List<DataResponse> publisherDataList = publisherPage.getContent().stream()
-                .map(p -> new DataResponse(HttpStatus.OK.value(), "Publisher data", p))
+        List<PublisherResponseDTO> dtoList = publisherPage.getContent().stream()
+                .map(publisherService::convertToDTO)
                 .collect(Collectors.toList());
 
-        PublisherDetails details = new PublisherDetails();
-        details.setData(publisherDataList);
-        details.setTotalPages(publisherPage.getTotalPages());
-        details.setTotalElements(publisherPage.getTotalElements());
-
-        DataResponse wrapper = new DataResponse(HttpStatus.OK.value(), "Publishers fetched successfully", details);
-        ApiResponse response = new ApiResponse(wrapper);
+        ApiResponsePublisher response = new ApiResponsePublisher(
+                HttpStatus.OK.value(),
+                "Publishers fetched successfully",
+                dtoList,
+                publisherPage.getTotalPages(),
+                publisherPage.getTotalElements()
+        );
 
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/user/publishers/{id}")
+    public ResponseEntity<PublisherDetails> getPublisherById(@PathVariable Long id) {
+        Publisher pub = publisherService.getPublisherById(id);
+        PublisherResponseDTO dto = publisherService.convertToDTO(pub);
+        PublisherDetails response = new PublisherDetails(HttpStatus.OK.value(), "Publisher fetched successfully", dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/user/publishers/search")
+    public ResponseEntity<ApiResponsePublisher> searchPublishers(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Publisher> publisherPage = publisherService.searchPublishers(keyword, PageRequest.of(page, size));
+
+        List<PublisherResponseDTO> dtoList = publisherPage.getContent().stream()
+                .map(publisherService::convertToDTO)
+                .collect(Collectors.toList());
+
+        ApiResponsePublisher response = new ApiResponsePublisher(
+                HttpStatus.OK.value(),
+                "Filtered publishers",
+                dtoList,
+                publisherPage.getTotalPages(),
+                publisherPage.getTotalElements()
+        );
+
+        return ResponseEntity.ok(response);
+    }
 
     @PutMapping("/librarian/publishers/{id}")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> updatePublisher(@PathVariable("id") Long id, @RequestBody Publisher publisherDetails) {
+    public ResponseEntity<PublisherDetails> updatePublisher(@PathVariable Long id, @RequestBody Publisher publisherDetails) {
         Publisher updated = publisherService.updatePublisher(id, publisherDetails);
-
-        DataResponse data = new DataResponse(HttpStatus.OK.value(), "Publisher updated successfully", updated);
-        ApiResponse response = new ApiResponse(data);
-
+        PublisherResponseDTO dto = publisherService.convertToDTO(updated);
+        PublisherDetails response = new PublisherDetails(HttpStatus.OK.value(), "Publisher updated successfully", dto);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/admin/publishers/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> deletePublisher(@PathVariable("id") Long id) {
+    public ResponseEntity<PublisherDetails> deletePublisher(@PathVariable Long id) {
         publisherService.deletePublisher(id);
-
-        DataResponse data = new DataResponse(HttpStatus.OK.value(), "Publisher deleted successfully", null);
-        ApiResponse response = new ApiResponse(data);
-
+        PublisherDetails response = new PublisherDetails(HttpStatus.OK.value(), "Publisher deleted successfully", null);
         return ResponseEntity.ok(response);
     }
 }

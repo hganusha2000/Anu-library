@@ -9,10 +9,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import Hutechlibrary.Anu.Library.dto.AuthorResponseDTO;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
 import Hutechlibrary.Anu.Library.entity.Author;
 import Hutechlibrary.Anu.Library.exception.ResourceNotFoundException;
 import Hutechlibrary.Anu.Library.repository.AuthorRepository;
+import jakarta.validation.Valid;
 
 
 
@@ -22,28 +24,29 @@ public class AuthorServiceIMPL implements AuthorService {
     @Autowired
     private AuthorRepository authorRepository;
 
+ 
     @Override
-    public DataResponse createAuthor(Author author) {
+    public Author createAuthorEntity(Author author) {
         if (authorRepository.existsByName(author.getName())) {
-            return new DataResponse(HttpStatus.CONFLICT.value(), "Author already exists", null);
+            throw new RuntimeException("Author already exists with name: " + author.getName());
         }
-
-        author.setRecordedAt(LocalDateTime.now()); // Set timestamp manually
-        Author savedAuthor = authorRepository.save(author);
-        return new DataResponse(HttpStatus.CREATED.value(), "Author created successfully", savedAuthor);
+        author.setRecordedAt(LocalDateTime.now());
+        return authorRepository.save(author);
     }
+
 
     @Override
     public Page<Author> getAllAuthorsPaginated(Pageable pageable) {
         return authorRepository.findAll(pageable);
     }
 
+   
     @Override
     public Author getAuthorById(Long id) {
         return authorRepository.findById(id)
-        	    .orElseThrow(() -> new ResourceNotFoundException("Author not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Author not found with id: " + id));
     }
-    
+
     @Override
     public Page<Author> searchAuthors(String name, String biography, Pageable pageable) {
         return authorRepository.findByNameContainingIgnoreCaseAndBiographyContainingIgnoreCase(
@@ -53,7 +56,7 @@ public class AuthorServiceIMPL implements AuthorService {
         );
     }
 
-
+    
     @Override
     public Author updateAuthor(Long id, Author authorDetails) {
         Author author = getAuthorById(id);
@@ -62,9 +65,23 @@ public class AuthorServiceIMPL implements AuthorService {
         return authorRepository.save(author);
     }
 
+ 
     @Override
     public void deleteAuthor(Long id) {
         Author author = getAuthorById(id);
         authorRepository.delete(author);
     }
+
+ 
+    @Override
+    public AuthorResponseDTO convertToDto(Author author) {
+        return new AuthorResponseDTO(
+                author.getId(),
+                author.getName(),
+                author.getBiography(),
+                author.getBooks(),
+                author.getRecordedAt()
+        );
+    }
+
 }

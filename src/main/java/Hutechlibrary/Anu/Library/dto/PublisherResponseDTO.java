@@ -1,5 +1,6 @@
 package Hutechlibrary.Anu.Library.dto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -9,15 +10,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-
-
-public class PageBorrowDetails {
+public class PublisherResponseDTO {
 	
-
-    private List<BorrowDetails> borrows;  // ✅ Correct field name
-    private int totalPages;
-    private long totalElements;
-	
-	
+	 private Long id;
+	    private String name;
+	    private String address;
+	    private LocalDateTime recordedAt;
 
 }

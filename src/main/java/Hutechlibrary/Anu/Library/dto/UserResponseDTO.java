@@ -3,7 +3,6 @@ package Hutechlibrary.Anu.Library.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import Hutechlibrary.Anu.Library.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,9 +11,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class UserDetails  {
+public class UserResponseDTO {
+	
 
-    private int status;
-    private String message;
-    private Object users;
+    private Long id;
+    private String username;
+    private String email;
+    private boolean isActivated;
+    private LocalDateTime createdAt;
+
 }

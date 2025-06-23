@@ -1,6 +1,7 @@
 package Hutechlibrary.Anu.Library.controller;
 
 import java.util.List;
+
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +21,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
+import Hutechlibrary.Anu.Library.dto.ApiResponseMember;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
 import Hutechlibrary.Anu.Library.dto.MemberDetails;
+import Hutechlibrary.Anu.Library.dto.MemberResponseDTO;
 import Hutechlibrary.Anu.Library.entity.Member;
 import Hutechlibrary.Anu.Library.service.MemberService;
 import jakarta.validation.Valid;
@@ -31,53 +34,44 @@ public class MemberController {
 
     @Autowired
     private MemberService memberService;
-    
 
-    // CREATE a new member – LIBRARIAN or ADMIN
+    // ✅ CREATE MEMBER
     @PostMapping("/librarian/members")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> createMember(@Valid @RequestBody Member member) {
-        DataResponse responseData = memberService.createMember(member);
-
-        // Directly use the responseData from service
-        ApiResponse response = new ApiResponse(responseData);
-
-        // Return appropriate status based on the content
-        if (responseData.getStatus() == HttpStatus.CONFLICT.value()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-        }
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<MemberResponseDTO> createMember(@Valid @RequestBody Member member) {
+        Member saved = memberService.createMemberEntity(member);
+        MemberResponseDTO dto = memberService.convertToDTO(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-
-    // LIST all members – LIBRARIAN or ADMIN
+    // ✅ GET ALL MEMBERS (PAGINATED)
     @GetMapping("/librarian/members")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> getAllMembers(
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size) {
+    public ResponseEntity<ApiResponseMember> getAllMembers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         Page<Member> memberPage = memberService.getAllMembersPaginated(PageRequest.of(page, size));
+        List<MemberResponseDTO> dtoList = memberPage.getContent()
+                .stream()
+                .map(memberService::convertToDTO)
+                .collect(Collectors.toList());
 
-        List<DataResponse> memberDataList = memberPage.getContent().stream()
-                .map(member -> new DataResponse(HttpStatus.OK.value(), "Member data", member))
-                .toList();
+        ApiResponseMember response = new ApiResponseMember(
+                HttpStatus.OK.value(),
+                "fetched successfully",
+                dtoList,
+                memberPage.getTotalPages(),
+                memberPage.getTotalElements()
+        );
 
-        MemberDetails memberDetails = new MemberDetails();
-        memberDetails.setData(memberDataList);
-        memberDetails.setTotalPages(memberPage.getTotalPages());
-        memberDetails.setTotalElements(memberPage.getTotalElements());
-
-        DataResponse wrapper = new DataResponse(HttpStatus.OK.value(), "Members fetched successfully", memberDetails);
-        ApiResponse apiResponse = new ApiResponse(wrapper);
-
-        return ResponseEntity.ok(apiResponse);
+        return ResponseEntity.ok(response);
     }
-    
+
+    // ✅ SEARCH MEMBERS
     @GetMapping("/librarian/members/search")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> searchMembers(
+    public ResponseEntity<ApiResponseMember> searchMembers(
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
             @RequestParam(required = false) String email,
@@ -86,55 +80,46 @@ public class MemberController {
             @RequestParam(defaultValue = "10") int size) {
 
         Page<Member> memberPage = memberService.searchMembers(firstName, lastName, email, phone, PageRequest.of(page, size));
+        List<MemberResponseDTO> dtoList = memberPage.getContent()
+                .stream()
+                .map(memberService::convertToDTO)
+                .collect(Collectors.toList());
 
-        List<DataResponse> memberDataList = memberPage.getContent().stream()
-                .map(member -> new DataResponse(HttpStatus.OK.value(), "Filtered member", member))
-                .toList();
+        ApiResponseMember response = new ApiResponseMember(
+                HttpStatus.OK.value(),
+                "fetched successfully",
+                dtoList,
+                memberPage.getTotalPages(),
+                memberPage.getTotalElements()
+        );
 
-        MemberDetails memberDetails = new MemberDetails();
-        memberDetails.setData(memberDataList);
-        memberDetails.setTotalPages(memberPage.getTotalPages());
-        memberDetails.setTotalElements(memberPage.getTotalElements());
-
-        DataResponse dataResponse = new DataResponse(HttpStatus.OK.value(), "Filtered members fetched", memberDetails);
-        return ResponseEntity.ok(new ApiResponse(dataResponse));
+        return ResponseEntity.ok(response);
     }
 
-
-
-    // GET a single member by ID – LIBRARIAN or ADMIN
+    // ✅ GET MEMBER BY ID
     @GetMapping("/librarian/members/{id}")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> getMemberById(@PathVariable("id") Long id) {
+    public ResponseEntity<MemberResponseDTO> getMemberById(@PathVariable Long id) {
         Member member = memberService.getMemberById(id);
-
-        DataResponse dataResponse = new DataResponse(HttpStatus.OK.value(), "Member fetched successfully", member);
-        ApiResponse apiResponse = new ApiResponse(dataResponse);
-
-        return ResponseEntity.ok(apiResponse);
+        MemberResponseDTO dto = memberService.convertToDTO(member);
+        return ResponseEntity.ok(dto);
     }
 
-    // UPDATE an existing member – LIBRARIAN or ADMIN
+    // ✅ UPDATE MEMBER
     @PutMapping("/librarian/members/{id}")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> updateMember(@PathVariable("id") Long id, @Valid @RequestBody Member memberDetails) {
-        Member updatedMember = memberService.updateMember(id, memberDetails);
-
-        DataResponse dataResponse = new DataResponse(HttpStatus.OK.value(), "Member updated successfully", updatedMember);
-        ApiResponse apiResponse = new ApiResponse(dataResponse);
-
-        return ResponseEntity.ok(apiResponse);
+    public ResponseEntity<MemberResponseDTO> updateMember(@PathVariable Long id,
+                                                          @Valid @RequestBody Member memberDetails) {
+        Member updated = memberService.updateMember(id, memberDetails);
+        MemberResponseDTO dto = memberService.convertToDTO(updated);
+        return ResponseEntity.ok(dto);
     }
 
-    // DELETE a member – ADMIN only
+    // ✅ DELETE MEMBER
     @DeleteMapping("/admin/members/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> deleteMember(@PathVariable("id") Long id) {
+    public ResponseEntity<String> deleteMember(@PathVariable Long id) {
         memberService.deleteMember(id);
-
-        DataResponse dataResponse = new DataResponse(HttpStatus.OK.value(), "Member deleted successfully", null);
-        ApiResponse apiResponse = new ApiResponse(dataResponse);
-
-        return ResponseEntity.ok(apiResponse);
+        return ResponseEntity.ok("Member deleted successfully.");
     }
 }

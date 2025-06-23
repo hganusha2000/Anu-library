@@ -1,24 +1,23 @@
 package Hutechlibrary.Anu.Library.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
+import Hutechlibrary.Anu.Library.dto.ApiResponseLibrary;
 import Hutechlibrary.Anu.Library.dto.LibraryDetails;
+import Hutechlibrary.Anu.Library.dto.LibraryRequestDTO;
+import Hutechlibrary.Anu.Library.dto.LibraryResponseDTO;
+import Hutechlibrary.Anu.Library.entity.Library;
 
 public interface LibraryService {
 
-	 ApiResponse createLibrary(LibraryDetails libraryDetails);
+	Library createLibrary(LibraryRequestDTO req);
+    Page<Library> listLibraries(Pageable pageable);
+    Library getLibrary(Long id);
+    Library updateLibrary(Long id, LibraryRequestDTO req);
+    void deleteLibrary(Long id);
 
-	    ApiResponse getLibraryById(Long id);
-
-	    ApiResponse getAllLibraries();
-
-	    ApiResponse updateLibrary(Long id, LibraryDetails libraryDetails);
-
-	    ApiResponse deleteLibrary(Long id);
-
-	    ApiResponse getBooksInLibrary(Long libraryId);
-
-	    ApiResponse getUsersInLibrary(Long libraryId);
-
-	    ApiResponse getBorrowsInLibrary(Long libraryId);
+    LibraryResponseDTO toResponseDTO(Library library);
     
 }
