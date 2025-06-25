@@ -35,4 +35,27 @@ public class EmailService {
 
         mailSender.send(mimeMessage);
     }
+
+    public void sendPasswordResetEmail(String to, String token) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+
+            String resetLink = baseUrl + "/reset-password?token=" + token;  // Your frontend reset page
+            String subject = "Password Reset Request";
+            String content = "<h3>Password Reset Requested</h3>" +
+                    "<p>We received a request to reset your password.</p>" +
+                    "<p>Click the link below to reset it:</p>" +
+                    "<a href=\"" + resetLink + "\">Reset Password</a>" +
+                    "<p>This link will expire in 15 minutes.</p>";
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(content, true); // true = send HTML
+
+            mailSender.send(mimeMessage);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send password reset email", e);
+        }
+    }
 }

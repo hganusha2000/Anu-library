@@ -21,43 +21,49 @@ public class MemberServiceIMPL implements MemberService {
 	@Autowired
     private MemberRepository memberRepository;
     
-	@Override
-	public DataResponse createMember(Member member) {
-	    if (memberRepository.existsByEmail(member.getEmail())) {
-	        return new DataResponse(HttpStatus.CONFLICT.value(), "Email already exists", null);
-	    }
 
-	    if (memberRepository.existsByPhone(member.getPhone())) {
-	        return new DataResponse(HttpStatus.CONFLICT.value(), "Phone number already exists", null);
-	    }
+    // ✅ Used by Admin/Librarian
+    @Override
+    public DataResponse createMember(Member member) {
+        if (memberRepository.existsByEmail(member.getEmail())) {
+            return new DataResponse(HttpStatus.CONFLICT.value(), "Email already exists", null);
+        }
 
-	    Member savedMember = memberRepository.save(member);
-	    MemberResponseDTO dto = convertToDTO(savedMember);
-	    return new DataResponse(HttpStatus.CREATED.value(), "Member created successfully", dto);
-	}
+        if (memberRepository.existsByPhone(member.getPhone())) {
+            return new DataResponse(HttpStatus.CONFLICT.value(), "Phone number already exists", null);
+        }
 
+        Member savedMember = memberRepository.save(member);
+        MemberResponseDTO dto = convertToDTO(savedMember);
+        return new DataResponse(HttpStatus.CREATED.value(), "Member created successfully", dto);
+    }
+
+    // ✅ Used for pagination
     @Override
     public Page<Member> getAllMembersPaginated(Pageable pageable) {
         return memberRepository.findAll(pageable);
     }
-    
+
+    // ✅ Get by ID
     @Override
     public Member getMemberById(Long id) {
         return memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + id));
     }
-    
+
+    // ✅ Search with optional filters
     @Override
     public Page<Member> searchMembers(String firstName, String lastName, String email, String phone, Pageable pageable) {
         firstName = firstName != null ? firstName : "";
         lastName = lastName != null ? lastName : "";
         email = email != null ? email : "";
         phone = phone != null ? phone : "";
-        
+
         return memberRepository.findByFirstNameContainingIgnoreCaseAndLastNameContainingIgnoreCaseAndEmailContainingIgnoreCaseAndPhoneContainingIgnoreCase(
-            firstName, lastName, email, phone, pageable);
+                firstName, lastName, email, phone, pageable);
     }
 
+    // ✅ Update
     @Override
     public Member updateMember(Long id, Member memberDetails) {
         Member member = getMemberById(id);
@@ -68,17 +74,28 @@ public class MemberServiceIMPL implements MemberService {
         return memberRepository.save(member);
     }
 
+    // ✅ Delete
     @Override
     public void deleteMember(Long id) {
         Member member = getMemberById(id);
         memberRepository.delete(member);
     }
 
+    // ✅ Used during user registration — throws error if email/phone exists
     @Override
     public Member createMemberEntity(Member member) {
+        if (memberRepository.existsByEmail(member.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+
+        if (memberRepository.existsByPhone(member.getPhone())) {
+            throw new IllegalArgumentException("Phone number already exists");
+        }
+
         return memberRepository.save(member);
     }
 
+    // ✅ Convert to DTO
     @Override
     public MemberResponseDTO convertToDTO(Member member) {
         MemberResponseDTO dto = new MemberResponseDTO();

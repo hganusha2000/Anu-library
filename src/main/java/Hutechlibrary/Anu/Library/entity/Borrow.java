@@ -39,8 +39,8 @@ public class Borrow {
     @JoinColumn(name = "library_id")
     private Library library;
 
-	private LocalDateTime borrowDate = LocalDateTime.now();    
-	private LocalDateTime returnDate;
+	private LocalDate borrowDate;    
+	private LocalDate returnDate;
     private boolean returned;
     
     @CreationTimestamp

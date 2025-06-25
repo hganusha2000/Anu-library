@@ -1,8 +1,11 @@
 package Hutechlibrary.Anu.Library.controller;
 
 import Hutechlibrary.Anu.Library.dto.ApiResponse;
+import Hutechlibrary.Anu.Library.dto.ApiResponse1;
 import Hutechlibrary.Anu.Library.dto.ApiResponseUser;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
+import Hutechlibrary.Anu.Library.dto.PasswordResetForm;
+import Hutechlibrary.Anu.Library.dto.PasswordResetRequest;
 import Hutechlibrary.Anu.Library.dto.UserDetails;
 import Hutechlibrary.Anu.Library.dto.UserResponseDTO;
 import Hutechlibrary.Anu.Library.entity.User;
@@ -54,6 +57,31 @@ public class UserController {
 
         return ResponseEntity.ok(response);
     }
+    
+ // Step 1: Request password reset
+    @PostMapping("/reset-password/request")
+    public ResponseEntity<ApiResponse1> requestPasswordReset(@RequestBody PasswordResetRequest request) {
+        try {
+            userService.initiatePasswordReset(request.getEmail());
+            DataResponse response = new DataResponse(HttpStatus.OK.value(), "Password reset link sent to email", null);
+            return ResponseEntity.ok(new ApiResponse1(response));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse1(new DataResponse(400, e.getMessage(), null)));
+        }
+    }
+
+    // Step 2: Reset password using token
+    @PostMapping("/reset-password/confirm")
+    public ResponseEntity<ApiResponse1> confirmPasswordReset(@RequestBody PasswordResetForm form) {
+        try {
+            userService.resetPassword(form.getToken(), form.getNewPassword());
+            DataResponse response = new DataResponse(HttpStatus.OK.value(), "Password reset successfully", null);
+            return ResponseEntity.ok(new ApiResponse1(response));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse1(new DataResponse(400, e.getMessage(), null)));
+        }
+    }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete/{id}")

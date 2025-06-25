@@ -20,12 +20,15 @@ import Hutechlibrary.Anu.Library.dto.ApiResponse1;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
 import Hutechlibrary.Anu.Library.dto.LoginRequest;
 import Hutechlibrary.Anu.Library.dto.RegisterRequest;
+import Hutechlibrary.Anu.Library.entity.Member;
 import Hutechlibrary.Anu.Library.entity.User;
 import Hutechlibrary.Anu.Library.service.JwtService;
+import Hutechlibrary.Anu.Library.service.MemberService;
 import Hutechlibrary.Anu.Library.service.UserService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
@@ -40,6 +43,9 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private MemberService memberService;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -56,9 +62,19 @@ public class AuthController {
         }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-        String token = jwtService.generateToken(userDetails);
+        Map<String, Object> tokenData = jwtService.generateTokenWithExpiry(userDetails);
 
-        DataResponse success = new DataResponse(HttpStatus.OK.value(), "Login successful", Map.of("token", token));
+        // ✅ Insert token first, then expiresAt
+        Map<String, Object> loginData = new LinkedHashMap<>();
+        loginData.put("token", tokenData.get("token"));
+        loginData.put("expiresAt", tokenData.get("expiresAt"));
+
+        DataResponse success = new DataResponse(
+            HttpStatus.OK.value(),
+            "Login successful",
+            loginData
+        );
+
         return ResponseEntity.ok(new ApiResponse1(success));
     }
 
@@ -67,34 +83,61 @@ public class AuthController {
         try {
             User user = userService.registerUser(registerRequest);
 
+            // ✅ If role is USER, automatically create a linked Member
+            if ("USER".equalsIgnoreCase(registerRequest.getRole())) {
+                Member member = new Member();
+                member.setFirstName(registerRequest.getFirstName());
+                member.setLastName(registerRequest.getLastName());
+                member.setEmail(registerRequest.getEmail());
+                member.setPhone(registerRequest.getPhone());
+                member.setUser(user); // One-to-one link with user
+                memberService.createMemberEntity(member);
+            }
+
             String role = registerRequest.getRole().toUpperCase();
             String message = switch (role) {
                 case "ADMIN" -> "Admin registered successfully";
                 case "LIBRARIAN" -> "Librarian registered successfully";
-                case "USER" -> "User registered successfully";
+                case "USER" -> "User registered successfully and added as member";
                 default -> "User registered";
             };
 
-            DataResponse dataResponse = new DataResponse(HttpStatus.CREATED.value(), message, user);
+            DataResponse dataResponse = new DataResponse(
+                HttpStatus.CREATED.value(),
+                message,
+                user
+            );
+
             return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse1(dataResponse));
 
         } catch (IllegalArgumentException e) {
-            DataResponse error = new DataResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null);
+            DataResponse error = new DataResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                null
+            );
             return ResponseEntity.badRequest().body(new ApiResponse1(error));
         }
     }
-    
+
+    // ✅ ACCOUNT ACTIVATION
     @GetMapping("/activate")
     public ResponseEntity<ApiResponse1> activateAccount(@RequestParam String token) {
         try {
             userService.activateUser(token);
-            DataResponse dataResponse = new DataResponse(HttpStatus.OK.value(), "Account activated successfully", null);
+            DataResponse dataResponse = new DataResponse(
+                HttpStatus.OK.value(),
+                "Account activated successfully",
+                null
+            );
             return ResponseEntity.ok(new ApiResponse1(dataResponse));
         } catch (IllegalArgumentException e) {
-            DataResponse error = new DataResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null);
+            DataResponse error = new DataResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                e.getMessage(),
+                null
+            );
             return ResponseEntity.badRequest().body(new ApiResponse1(error));
         }
     }
 }
-
-    

@@ -48,8 +48,7 @@ public class BorrowServiceIMPL implements BorrowService{
 	        // Set borrow data
 	        borrow.setBook(book);
 	        borrow.setMember(member);
-	        borrow.setBorrowDate(LocalDate.now().atStartOfDay());
-	        borrow.setReturned(false);
+	        borrow.setBorrowDate(LocalDate.now());	        borrow.setReturned(false);
 
 	        // Decrement available copies
 	        book.setAvailableCopies(book.getAvailableCopies() - 1);
@@ -119,7 +118,7 @@ public class BorrowServiceIMPL implements BorrowService{
 	            throw new IllegalStateException("Book already returned");
 	        }
 	        borrow.setReturned(true);
-	        borrow.setReturnDate(LocalDate.now().atStartOfDay()); // ✅ converts LocalDate to LocalDateTime
+	        borrow.setReturnDate(LocalDate.now()); // ✅ converts LocalDate to LocalDateTime
 
 	        Book book = borrow.getBook();
 	        book.setAvailableCopies(book.getAvailableCopies() + 1); 

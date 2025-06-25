@@ -1,5 +1,6 @@
 package Hutechlibrary.Anu.Library.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -90,6 +91,34 @@ public class UserService implements UserDetailsService {
 
         return user;
     }
+    
+    public void initiatePasswordReset(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException("Email not registered"));
+
+        String token = UUID.randomUUID().toString();
+        user.setResetToken(token);
+        user.setTokenExpiry(LocalDateTime.now().plusMinutes(15));
+        userRepository.save(user);
+
+        // ✅ Send email with reset link containing token
+        emailService.sendPasswordResetEmail(user.getEmail(), token);
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        User user = userRepository.findByResetToken(token)
+            .orElseThrow(() -> new IllegalArgumentException("Invalid or expired token"));
+
+        if (user.getTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Reset token has expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        user.setTokenExpiry(null);
+        userRepository.save(user);
+    }
+
 
     @Transactional
     public void activateUser(String token) {

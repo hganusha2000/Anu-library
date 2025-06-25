@@ -117,7 +117,7 @@ public class BorrowController {
                 borrow.getBook().getTitle(),
                 borrow.getMember().getId(),
                 borrow.getBorrowDate(),
-                borrow.getReturnDate() != null ? borrow.getReturnDate().toLocalDate() : null,
+                borrow.getReturnDate(),
                 borrow.isReturned()
         );
     }

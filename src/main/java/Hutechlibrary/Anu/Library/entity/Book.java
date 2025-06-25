@@ -53,7 +53,8 @@ public class Book {
 	private Integer totalCopies = 1;
 	private Integer availableCopies = 1;
     	
-    @Column(name = "created_at", updatable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
-    private LocalDateTime createdAt;
+	@CreationTimestamp
+	@Column(name = "created_at", updatable = false)
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
+	private LocalDateTime createdAt;
 }

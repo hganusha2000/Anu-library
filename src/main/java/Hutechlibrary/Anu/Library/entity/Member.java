@@ -12,7 +12,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -45,6 +47,10 @@ public class Member {
     @OneToMany(mappedBy = "member")
     @JsonBackReference
     private List<Borrow> borrows;
+    
+    @OneToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User user;
     
 	private LocalDateTime createdAt = LocalDateTime.now();
 	private LocalDateTime updatedAt = LocalDateTime.now();

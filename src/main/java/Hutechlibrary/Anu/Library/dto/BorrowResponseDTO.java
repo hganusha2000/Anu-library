@@ -18,8 +18,7 @@ public class BorrowResponseDTO {
     private Long bookId;
     private String bookTitle;
     private Long memberId;
-//    private String memberName;
-    private LocalDateTime borrowDate;
+    private LocalDate borrowDate;
     private LocalDate returnDate;
     private boolean returned;
 	
