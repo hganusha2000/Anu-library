@@ -20,10 +20,8 @@ import Hutechlibrary.Anu.Library.dto.ApiResponse1;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
 import Hutechlibrary.Anu.Library.dto.LoginRequest;
 import Hutechlibrary.Anu.Library.dto.RegisterRequest;
-import Hutechlibrary.Anu.Library.entity.Member;
 import Hutechlibrary.Anu.Library.entity.User;
 import Hutechlibrary.Anu.Library.service.JwtService;
-import Hutechlibrary.Anu.Library.service.MemberService;
 import Hutechlibrary.Anu.Library.service.UserService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
@@ -44,8 +42,7 @@ public class AuthController {
     @Autowired
     private UserService userService;
     
-    @Autowired
-    private MemberService memberService;
+
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -82,17 +79,6 @@ public class AuthController {
     public ResponseEntity<ApiResponse1> register(@Valid @RequestBody RegisterRequest registerRequest) throws MessagingException {
         try {
             User user = userService.registerUser(registerRequest);
-
-            // ✅ If role is USER, automatically create a linked Member
-            if ("USER".equalsIgnoreCase(registerRequest.getRole())) {
-                Member member = new Member();
-                member.setFirstName(registerRequest.getFirstName());
-                member.setLastName(registerRequest.getLastName());
-                member.setEmail(registerRequest.getEmail());
-                member.setPhone(registerRequest.getPhone());
-                member.setUser(user); // One-to-one link with user
-                memberService.createMemberEntity(member);
-            }
 
             String role = registerRequest.getRole().toUpperCase();
             String message = switch (role) {

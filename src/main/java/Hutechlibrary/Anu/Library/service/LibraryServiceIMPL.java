@@ -60,13 +60,29 @@ public class LibraryServiceIMPL implements LibraryService {
 
     @Override
     public LibraryResponseDTO toResponseDTO(Library lib) {
+        List<String> bookNames = lib.getBooks().stream()
+                .map(Book::getTitle)
+                .collect(Collectors.toList());
+
+        List<String> userNames = lib.getUsers().stream()
+                .map(User::getUsername) // or getName() depending on your User entity
+                .collect(Collectors.toList());
+
+        List<String> borrowSummaries = lib.getBorrows().stream()
+                .map(borrow -> {
+                    String userName = borrow.getUser() != null ? borrow.getUser().getUsername() : "Unknown User";
+                    String bookTitle = borrow.getBook() != null ? borrow.getBook().getTitle() : "Unknown Book";
+                    return userName + " borrowed " + bookTitle;
+                })
+                .collect(Collectors.toList());
+
         return new LibraryResponseDTO(
-            lib.getId(),
-            lib.getName(),
-            lib.getAddress(),
-            lib.getBooks().stream().map(Book::getId).collect(Collectors.toList()),
-            lib.getUsers().stream().map(User::getId).collect(Collectors.toList()),
-            lib.getBorrows().stream().map(Borrow::getId).collect(Collectors.toList())
+                lib.getId(),
+                lib.getName(),
+                lib.getAddress(),
+                bookNames,
+                userNames,
+                borrowSummaries
         );
     }
 }

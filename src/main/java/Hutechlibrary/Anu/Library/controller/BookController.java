@@ -43,6 +43,25 @@ public class BookController {
 				bookService.convertToDto(savedBook));
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
+	
+	@PostMapping("/librarian/books/bulk")
+	@PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
+	public ResponseEntity<ApiResponseBook> createMultipleBooks(@RequestBody List<@Valid Book> books) {
+	    List<Book> savedBooks = bookService.createMultipleBooks(books);
+	    List<BookResponseDTO> dtoList = savedBooks.stream()
+	            .map(bookService::convertToDto)
+	            .toList();
+
+	    ApiResponseBook response = new ApiResponseBook(
+	            HttpStatus.CREATED.value(),
+	            "Books created successfully",
+	            dtoList,
+	            1,
+	            dtoList.size()
+	    );
+	    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	}
+
 
 	@GetMapping(value = "/user/books", produces = "application/json")
 	public ResponseEntity<ApiResponseBook> getAllBooksPaginated(@RequestParam(defaultValue = "0") int page,

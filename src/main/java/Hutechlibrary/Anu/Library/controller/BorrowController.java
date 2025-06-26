@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseEntity.BodyBuilder;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,10 +28,10 @@ import Hutechlibrary.Anu.Library.dto.BorrowDetails;
 import Hutechlibrary.Anu.Library.dto.BorrowResponseDTO;
 import Hutechlibrary.Anu.Library.dto.DataResponse;
 import Hutechlibrary.Anu.Library.entity.Borrow;
-import Hutechlibrary.Anu.Library.entity.Member;
+import Hutechlibrary.Anu.Library.entity.User;
 import Hutechlibrary.Anu.Library.repository.BorrowRepository;
+import Hutechlibrary.Anu.Library.repository.UserRepository;
 import Hutechlibrary.Anu.Library.service.BorrowService;
-import Hutechlibrary.Anu.Library.service.MemberService;
 
 @RestController
 @RequestMapping("/api")
@@ -37,11 +39,24 @@ public class BorrowController {
 
     @Autowired
     private BorrowService borrowService;
+    
+    @Autowired
+    private UserRepository userRepository;
 
-    // ✅ Create
     @PostMapping("/librarian/borrows")
-    @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<BorrowResponseDTO> createBorrow(@RequestBody Borrow borrow) {
+        // Get the authenticated user
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        // Set the user from DB using the username
+        
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        borrow.setUser(user); // inject actual user from token
+
         Borrow saved = borrowService.createBorrow(borrow);
         BorrowResponseDTO dto = convertToDTO(saved);
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
@@ -109,16 +124,32 @@ public class BorrowController {
         return ResponseEntity.ok("Borrow record deleted successfully.");
     }
 
-    // ✅ Helper Method
     private BorrowResponseDTO convertToDTO(Borrow borrow) {
-        return new BorrowResponseDTO(
-                borrow.getId(),
-                borrow.getBook().getId(),
-                borrow.getBook().getTitle(),
-                borrow.getMember().getId(),
-                borrow.getBorrowDate(),
-                borrow.getReturnDate(),
-                borrow.isReturned()
+        BorrowResponseDTO dto = new BorrowResponseDTO();
+
+        dto.setId(borrow.getId());
+        dto.setBookTitle(
+            borrow.getBook() != null ? borrow.getBook().getTitle() : "Unknown Book"
         );
+        dto.setBorrowDate(borrow.getBorrowDate());
+        dto.setReturnDate(borrow.getReturnDate());
+        dto.setReturned(borrow.isReturned());
+
+        if (borrow.getUser() != null) {
+            dto.setUserId(borrow.getUser().getId());
+            dto.setUsername(borrow.getUser().getUsername());
+        } else {
+            dto.setUserId(null);
+            dto.setUsername("Unknown User");
+        }
+
+        if (borrow.getLibrary() != null) {
+            dto.setLibraryId(borrow.getLibrary().getId());
+        } else {
+            dto.setLibraryId(null);
+        }
+
+        return dto;
     }
+
 }

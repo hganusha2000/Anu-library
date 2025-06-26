@@ -21,7 +21,7 @@ public interface BookService {
     Book updateBook(Long id, Book bookDetails);
     void deleteBook(Long id);
     BookResponseDTO convertToDto(Book book);
-
+    List<Book> createMultipleBooks(List<Book> books);
 
 
 }

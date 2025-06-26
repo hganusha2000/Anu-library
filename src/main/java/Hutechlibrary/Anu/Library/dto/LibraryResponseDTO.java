@@ -15,8 +15,8 @@ public class LibraryResponseDTO {
     private Long id;
     private String name;
     private String address;
-    private List<Long> bookIds;
-    private List<Long> userIds;
-    private List<Long> borrowIds;
+    private List<String> bookNames;
+    private List<String> userNames;
+    private List<String> borrowSummaries;
 
 }

@@ -44,6 +44,7 @@ public class Book {
     @JsonBackReference(value = "author-book")
     private Author author;
 
+
     @ManyToOne
     @JoinColumn(name = "publisher_id")
     @JsonBackReference(value = "publisher-book")
@@ -55,6 +56,5 @@ public class Book {
     	
 	@CreationTimestamp
 	@Column(name = "created_at", updatable = false)
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
 	private LocalDateTime createdAt;
 }

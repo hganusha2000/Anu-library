@@ -13,6 +13,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import Hutechlibrary.Anu.Library.enums.UserStatus;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -69,7 +71,17 @@ public class User {
     private LocalDateTime tokenExpiry;
 
 
-	private LocalDateTime createdAt = LocalDateTime.now();
-	private LocalDateTime updatedAt = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+	
+
+@Enumerated(EnumType.STRING)
+@Column(nullable = false)
+private UserStatus status = UserStatus.ACTIVE;
 
 	}

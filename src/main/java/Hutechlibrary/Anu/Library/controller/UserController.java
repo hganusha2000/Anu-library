@@ -43,6 +43,7 @@ public class UserController {
                         user.getUsername(),
                         user.getEmail(),
                         user.isActivated(),
+                        user.getUpdatedAt(),
                         user.getCreatedAt()
                 ))
                 .collect(Collectors.toList());

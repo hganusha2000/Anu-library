@@ -40,7 +40,7 @@ public class Author {
     private List<Book> books;
     
     @Column(name = "recorded_at", updatable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
+    @CreationTimestamp
     private LocalDateTime recordedAt;
     
 }
